@@ -1,5 +1,6 @@
 use crate::bus::Bus;
 use crate::cpu::Cpu;
+use anyhow::Result;
 
 pub struct Emulator {
     cpu: Cpu,
@@ -10,15 +11,9 @@ impl Emulator {
         Emulator { cpu: Cpu::new(bus) }
     }
 
-    pub fn start(mut self) {
+    pub fn start(mut self) -> Result<()> {
         loop {
-            match self.cpu.step() {
-                Ok(_) => {}
-                Err(e) => {
-                    println!("error: {:?}", e);
-                    return;
-                }
-            }
+            self.cpu.step()?;
         }
     }
 }

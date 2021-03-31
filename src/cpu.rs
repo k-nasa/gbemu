@@ -1,4 +1,5 @@
 use crate::{bus::Bus, HalfWord, Word};
+use anyhow::{bail, Result};
 
 type Opecode = u8;
 
@@ -44,7 +45,7 @@ impl Cpu {
         }
     }
 
-    pub fn step(&mut self) -> Result<(), ()> {
+    pub fn step(&mut self) -> Result<()> {
         let opcode = self.fetch();
 
         let instruction = if opcode == 0xCB {
@@ -56,7 +57,7 @@ impl Cpu {
 
         let instruction = match instruction {
             Some(i) => i,
-            None => return Err(()),
+            None => bail!("not implemented opcode {:X}", opcode),
         };
 
         let operands = self.fetch_operands(instruction.length_in_bytes);

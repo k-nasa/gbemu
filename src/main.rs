@@ -2,11 +2,13 @@ use gbemu::bus::Bus;
 use gbemu::cartridge::Cartridge;
 use gbemu::emulator::Emulator;
 
-fn main() {
+use anyhow::Result;
+
+fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() < 1 {
-        return;
+        anyhow::bail!("Plese speficy filepath")
     }
 
     let filename = &args[1];
@@ -15,5 +17,7 @@ fn main() {
     let bus = Bus::new(Cartridge::new(bytes));
     let emu = Emulator::new(bus);
 
-    emu.start();
+    emu.start()?;
+
+    Ok(())
 }
