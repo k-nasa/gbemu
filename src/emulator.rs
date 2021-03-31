@@ -9,7 +9,10 @@ impl Emulator {
         todo!()
     }
 
-    pub fn start(self) {
-        todo!()
+    pub fn start(mut self) {
+        loop {
+            // TODO error handle
+            let _ = self.cpu.step();
+        }
     }
 }
