@@ -1,3 +1,4 @@
+use crate::bus::Bus;
 use crate::cpu::Cpu;
 
 pub struct Emulator {
@@ -5,8 +6,8 @@ pub struct Emulator {
 }
 
 impl Emulator {
-    pub fn new() -> Emulator {
-        todo!()
+    pub fn new(bus: Bus) -> Emulator {
+        Emulator { cpu: Cpu::new(bus) }
     }
 
     pub fn start(mut self) {

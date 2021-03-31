@@ -1,7 +1,11 @@
+use gbemu::bus::Bus;
+use gbemu::cartridge::Cartridge;
 use gbemu::emulator::Emulator;
 
 fn main() {
-    let emu = Emulator::new();
+    let bus = Bus::new(Cartridge::new(Vec::new()));
+
+    let emu = Emulator::new(bus);
 
     emu.start();
 }

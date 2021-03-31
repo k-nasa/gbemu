@@ -3,8 +3,8 @@
 
 //! Game Boy emulator core implementation.
 
-pub(crate) mod bus;
-pub(crate) mod cartridge;
+pub mod bus;
+pub mod cartridge;
 pub(crate) mod cpu;
 pub mod emulator;
 

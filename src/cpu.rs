@@ -14,6 +14,10 @@ struct Registers {
     l: HalfWord,
 }
 
+// ref http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
+const INIT_PC: Word = 0x100;
+const INIT_SP: Word = 0xFFFE;
+
 pub struct Cpu {
     registers: Registers,
     pc: Word,
@@ -22,8 +26,22 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new() -> Cpu {
-        todo!()
+    pub fn new(bus: Bus) -> Cpu {
+        Cpu {
+            pc: INIT_PC,
+            sp: INIT_SP,
+            registers: Registers {
+                a: 0x11,
+                f: 0x80,
+                b: 0x00,
+                c: 0x00,
+                d: 0xFF,
+                e: 0x56,
+                h: 0x00,
+                l: 0x0D,
+            },
+            bus,
+        }
     }
 
     pub fn step(&mut self) -> Result<(), ()> {

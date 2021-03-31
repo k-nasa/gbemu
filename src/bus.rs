@@ -1,11 +1,15 @@
 use crate::cartridge::Cartridge;
-use crate::{HalfWord, Word};
+use crate::Word;
 
 pub struct Bus {
     cartridge: Cartridge,
 }
 
 impl Bus {
+    pub fn new(cartridge: Cartridge) -> Bus {
+        Bus { cartridge }
+    }
+
     /// Ref http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
     ///```
     /// Interrupt Enable Register
