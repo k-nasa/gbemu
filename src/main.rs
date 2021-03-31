@@ -1,3 +1,7 @@
+use gbemu::emulator::Emulator;
+
 fn main() {
-    println!("Hello, world!");
+    let emu = Emulator::new();
+
+    emu.start();
 }
