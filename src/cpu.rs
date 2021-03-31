@@ -29,8 +29,22 @@ impl Registers {
             TargetRegister::L => self.l = half_word,
         }
     }
+
+    pub fn read(&mut self, target: TargetRegister) -> HalfWord {
+        match target {
+            TargetRegister::A => self.a,
+            TargetRegister::B => self.b,
+            TargetRegister::C => self.c,
+            TargetRegister::D => self.d,
+            TargetRegister::E => self.e,
+            TargetRegister::F => self.f,
+            TargetRegister::H => self.h,
+            TargetRegister::L => self.l,
+        }
+    }
 }
 
+#[derive(Clone, Copy)]
 enum TargetRegister {
     A,
     B,
@@ -98,11 +112,33 @@ impl Cpu {
                 // NOP
             }
             0x01 => {
+                // LD BC, u16
                 let operands = self.fetch_operands(2);
                 self.ldnn_u16(TargetRegister::B, TargetRegister::C, operands)
             }
+            0x02 => {
+                // LD (BC),A
+                self.ldrr_r(TargetRegister::B, TargetRegister::C, TargetRegister::A);
+            }
+            0x03 => {
+                // INC BC
+                self.inc_u16(TargetRegister::B, TargetRegister::C);
+            }
+            0x04 => {
+                // INC B
+                self.inc_u8(TargetRegister::B);
+            }
+            0x05 => {}
+            0x06 => {}
+            0x07 => {}
+            0x08 => {}
+            0x09 => {}
+            0x0A => {}
             _ => bail!("not implemented opcode {:X}", opcode),
         }
+        // {0x4, "INC B", 0, 1,  cpu.inc_n(&cpu.Regs.B) }},
+        // {0x5, "DEC B", 0, 1,  cpu.dec_n(&cpu.Regs.B) }},
+        // {0x6, "LD B,n", 1, 2, cpu.ldnn_n(&cpu.Regs.B, operands) }},
 
         Ok(())
     }
@@ -111,4 +147,41 @@ impl Cpu {
         self.registers.write(reg1, ops[1]);
         self.registers.write(reg2, ops[0]);
     }
+
+    fn ldrr_r(
+        &mut self,
+        upper_reg: TargetRegister,
+        lower_reg: TargetRegister,
+        byte_reg: TargetRegister,
+    ) {
+        let address = join_half_words(
+            self.registers.read(upper_reg),
+            self.registers.read(lower_reg),
+        );
+
+        let byte = self.registers.read(byte_reg);
+        self.bus.write_byte(address, byte);
+    }
+
+    fn inc_u16(&mut self, reg1: TargetRegister, reg2: TargetRegister) {
+        let mut word = join_half_words(self.registers.read(reg1), self.registers.read(reg2));
+        word += 1;
+
+        let (upper, lower) = split_word(word);
+
+        self.registers.write(reg1, upper);
+        self.registers.write(reg2, lower);
+    }
+
+    fn inc_u8(&mut self, reg: TargetRegister) {
+        todo!()
+    }
+}
+
+fn join_half_words(upper: HalfWord, lower: HalfWord) -> Word {
+    (upper as u16) << 8 ^ lower as u16
+}
+
+fn split_word(word: Word) -> (HalfWord, HalfWord) {
+    ((word >> 8) as HalfWord, (word ^ 0x00FF) as HalfWord)
 }
