@@ -53,6 +53,12 @@ impl Cpu {
         } else {
             Instruction::resolve_instruction(opcode)
         };
+
+        let instruction = match instruction {
+            Some(i) => i,
+            None => return Err(()),
+        };
+
         let operands = self.fetch_operands(instruction.length_in_bytes);
 
         instruction.execute(self, &operands);
@@ -102,12 +108,12 @@ struct Instruction {
 }
 
 impl Instruction {
-    pub fn resolve_instruction(opcode: HalfWord) -> Instruction {
-        INSTRUCTIONS[opcode as usize].clone()
+    pub fn resolve_instruction(opcode: HalfWord) -> Option<Instruction> {
+        INSTRUCTIONS.get(opcode as usize).cloned()
     }
 
-    pub fn resolve_cb_prefix_instruction(opcode: HalfWord) -> Instruction {
-        CB_PREFIX_INSTRUCTIONS[opcode as usize].clone()
+    pub fn resolve_cb_prefix_instruction(opcode: HalfWord) -> Option<Instruction> {
+        CB_PREFIX_INSTRUCTIONS.get(opcode as usize).cloned()
     }
 
     pub fn execute(&self, cpu: &mut Cpu, operands: &[HalfWord]) {

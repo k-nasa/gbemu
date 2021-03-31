@@ -12,8 +12,13 @@ impl Emulator {
 
     pub fn start(mut self) {
         loop {
-            // TODO error handle
-            let _ = self.cpu.step();
+            match self.cpu.step() {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("error: {:?}", e);
+                    return;
+                }
+            }
         }
     }
 }
