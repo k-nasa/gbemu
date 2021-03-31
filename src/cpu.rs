@@ -2,17 +2,44 @@ use crate::{bus::Bus, HalfWord, Word};
 use anyhow::{bail, Result};
 
 type Opecode = u8;
+type Operands = Vec<u8>;
 
 #[derive(Debug)]
 struct Registers {
-    a: HalfWord,
-    f: HalfWord,
-    b: HalfWord,
-    c: HalfWord,
-    d: HalfWord,
-    e: HalfWord,
-    h: HalfWord,
-    l: HalfWord,
+    pub a: HalfWord,
+    pub f: HalfWord,
+    pub b: HalfWord,
+    pub c: HalfWord,
+    pub d: HalfWord,
+    pub e: HalfWord,
+    pub h: HalfWord,
+    pub l: HalfWord,
+}
+
+impl Registers {
+    pub fn write(&mut self, target: TargetRegister, half_word: HalfWord) {
+        match target {
+            TargetRegister::A => self.a = half_word,
+            TargetRegister::B => self.b = half_word,
+            TargetRegister::C => self.c = half_word,
+            TargetRegister::D => self.d = half_word,
+            TargetRegister::E => self.e = half_word,
+            TargetRegister::F => self.f = half_word,
+            TargetRegister::H => self.h = half_word,
+            TargetRegister::L => self.l = half_word,
+        }
+    }
+}
+
+enum TargetRegister {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    H,
+    L,
 }
 
 // ref http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
@@ -48,21 +75,7 @@ impl Cpu {
     pub fn step(&mut self) -> Result<()> {
         let opcode = self.fetch();
 
-        let instruction = if opcode == 0xCB {
-            let opcode = self.fetch();
-            Instruction::resolve_cb_prefix_instruction(opcode)
-        } else {
-            Instruction::resolve_instruction(opcode)
-        };
-
-        let instruction = match instruction {
-            Some(i) => i,
-            None => bail!("not implemented opcode {:X}", opcode),
-        };
-
-        let operands = self.fetch_operands(instruction.length_in_bytes);
-
-        instruction.execute(self, &operands);
+        self.execute(opcode)?;
 
         Ok(())
     }
@@ -77,47 +90,25 @@ impl Cpu {
     fn fetch_operands(&mut self, length_in_bytes: usize) -> Vec<u8> {
         (0..length_in_bytes).map(|_| self.fetch()).collect()
     }
-}
 
-type F = fn(&mut Cpu, &[HalfWord]);
-const INSTRUCTIONS: &[Instruction] = &[inst(0x01, "NOP", 0, 1, |_, _| {})];
-const CB_PREFIX_INSTRUCTIONS: &[Instruction] = &[inst(0x01, "NOP", 0, 1, |_, _| {})];
+    // opcode list https://izik1.github.io/gbops/
+    fn execute(&mut self, opcode: Opecode) -> Result<()> {
+        match opcode {
+            0x00 => {
+                // NOP
+            }
+            0x01 => {
+                let operands = self.fetch_operands(2);
+                self.ldnn_u16(TargetRegister::B, TargetRegister::C, operands)
+            }
+            _ => bail!("not implemented opcode {:X}", opcode),
+        }
 
-const fn inst(
-    opcode: u8,
-    description: &'static str,
-    length_in_bytes: usize,
-    duration_in_cycle: usize,
-    executor: F,
-) -> Instruction {
-    Instruction {
-        opcode,
-        description,
-        length_in_bytes,
-        duration_in_cycle,
-        executor,
-    }
-}
-
-#[derive(Clone)]
-struct Instruction {
-    opcode: u8,
-    description: &'static str,
-    length_in_bytes: usize,
-    duration_in_cycle: usize,
-    executor: F,
-}
-
-impl Instruction {
-    pub fn resolve_instruction(opcode: HalfWord) -> Option<Instruction> {
-        INSTRUCTIONS.get(opcode as usize).cloned()
+        Ok(())
     }
 
-    pub fn resolve_cb_prefix_instruction(opcode: HalfWord) -> Option<Instruction> {
-        CB_PREFIX_INSTRUCTIONS.get(opcode as usize).cloned()
-    }
-
-    pub fn execute(&self, cpu: &mut Cpu, operands: &[HalfWord]) {
-        (self.executor)(cpu, operands)
+    fn ldnn_u16(&mut self, reg1: TargetRegister, reg2: TargetRegister, ops: Operands) {
+        self.registers.write(reg1, ops[1]);
+        self.registers.write(reg2, ops[0]);
     }
 }
