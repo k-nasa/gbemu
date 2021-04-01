@@ -170,9 +170,6 @@ impl Cpu {
             0x0A => {}
             _ => bail!("not implemented opcode {:X}", opcode),
         }
-        // {0x4, "INC B", 0, 1,  cpu.inc_n(&cpu.Regs.B) }},
-        // {0x5, "DEC B", 0, 1,  cpu.dec_n(&cpu.Regs.B) }},
-        // {0x6, "LD B,n", 1, 2, cpu.ldnn_n(&cpu.Regs.B, operands) }},
 
         Ok(())
     }
