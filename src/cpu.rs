@@ -4,16 +4,24 @@ use anyhow::{bail, Result};
 type Opecode = u8;
 type Operands = Vec<u8>;
 
+/// # Registers
+///  16bit Hi   Lo   Name/Function
+///  AF    A    -    Accumulator & Flags
+///  BC    B    C    BC
+///  DE    D    E    DE
+///  HL    H    L    HL
+///  SP    -    -    Stack Pointer
+///  PC    -    -    Program Counter/Pointer
 #[derive(Debug)]
 struct Registers {
     pub a: HalfWord,
-    pub f: HalfWord,
     pub b: HalfWord,
     pub c: HalfWord,
     pub d: HalfWord,
     pub e: HalfWord,
     pub h: HalfWord,
     pub l: HalfWord,
+    pub f: FlagRegister,
 }
 
 impl Registers {
@@ -24,7 +32,7 @@ impl Registers {
             TargetRegister::C => self.c = half_word,
             TargetRegister::D => self.d = half_word,
             TargetRegister::E => self.e = half_word,
-            TargetRegister::F => self.f = half_word,
+            TargetRegister::F => todo!(),
             TargetRegister::H => self.h = half_word,
             TargetRegister::L => self.l = half_word,
         }
@@ -37,7 +45,7 @@ impl Registers {
             TargetRegister::C => self.c,
             TargetRegister::D => self.d,
             TargetRegister::E => self.e,
-            TargetRegister::F => self.f,
+            TargetRegister::F => todo!(),
             TargetRegister::H => self.h,
             TargetRegister::L => self.l,
         }
@@ -54,6 +62,32 @@ enum TargetRegister {
     F,
     H,
     L,
+}
+
+/// Flag registers
+///Bit  Name  Set Clr  Expl.
+/// 7    zf    Z   NZ   Zero Flag
+/// 6    n     -   -    Add/Sub-Flag (BCD)
+/// 5    h     -   -    Half Carry Flag (BCD)
+/// 4    cy    C   NC   Carry Flag
+/// 3-0  -     -   -    Not used (always zero)
+#[derive(Debug)]
+struct FlagRegister {
+    z: bool,
+    n: bool,
+    h: bool,
+    c: bool,
+}
+
+impl FlagRegister {
+    pub fn from_byte(byte: u8) -> FlagRegister {
+        FlagRegister {
+            z: (byte >> 6) == 1,
+            n: (byte >> 5) == 1,
+            h: (byte >> 4) == 1,
+            c: (byte >> 3) == 1,
+        }
+    }
 }
 
 // ref http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
@@ -74,7 +108,7 @@ impl Cpu {
             sp: INIT_SP,
             registers: Registers {
                 a: 0x11,
-                f: 0x80,
+                f: FlagRegister::from_byte(0x80),
                 b: 0x00,
                 c: 0x00,
                 d: 0xFF,
