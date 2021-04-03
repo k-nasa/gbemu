@@ -549,9 +549,13 @@ impl Cpu {
         self.registers.write(reg, incremented);
     }
 
-    fn dec_u8(&mut self, reg: TargetRegister) {}
+    fn dec_u8(&mut self, reg: TargetRegister) {
+        let i = self.registers.read(reg);
+        let decremented = self.dec(i);
 
-    // TODO 動作が不安なのでテストコード書きたい
+        self.registers.write(reg, decremented);
+    }
+
     fn inc(&mut self, byte: HalfWord) -> HalfWord {
         let incremented = byte + 1;
 
@@ -563,6 +567,7 @@ impl Cpu {
             self.registers.f.set_z(false);
         }
 
+        // TODO 動作が不安なのでテストコード書きたい
         if byte & 0x10 != 0x10 && incremented & 0x10 == 0x10 {
             self.registers.f.set_h(true);
         } else {
@@ -570,6 +575,27 @@ impl Cpu {
         }
 
         return incremented;
+    }
+
+    fn dec(&mut self, byte: HalfWord) -> HalfWord {
+        let decremented = byte - 1;
+
+        self.registers.f.set_n(true);
+
+        if decremented == 0 {
+            self.registers.f.set_z(true);
+        } else {
+            self.registers.f.set_z(false);
+        }
+
+        // TODO 動作が不安なのでテストコード書きたい
+        if (decremented ^ 0x01 ^ byte) & 0x10 == 0x10 {
+            self.registers.f.set_h(true);
+        } else {
+            self.registers.f.set_h(false);
+        }
+
+        return decremented;
     }
 
     fn ldnn_sp(&mut self, operands: Operands) {
