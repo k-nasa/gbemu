@@ -193,7 +193,26 @@ impl Cpu {
         self.registers.write(reg, ops[0]);
     }
 
-    fn rlca(&self) {}
+    fn rlca(&mut self) {
+        let byte = self.registers.read(TargetRegister::A) << 1;
+        let mut shifted = byte << 1;
+
+        // Shift and rotate bits
+        if byte & 0x80 == 0x80 {
+            self.registers.f.set_c(true);
+            shifted = shifted ^ 0x01;
+        } else {
+            self.registers.f.set_c(false);
+        }
+
+        if shifted == 0 {
+            self.registers.f.set_z(true);
+        }
+        self.registers.f.set_n(false);
+        self.registers.f.set_h(false);
+
+        self.registers.write(TargetRegister::A, shifted);
+    }
 
     fn ldrr_r(
         &mut self,
