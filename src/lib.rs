@@ -7,6 +7,7 @@ pub mod bus;
 pub mod cartridge;
 pub(crate) mod cpu;
 pub mod emulator;
+pub(crate) mod logger;
 
 pub(crate) type Word = u16;
 pub(crate) type HalfWord = u8;

@@ -1,3 +1,4 @@
+use crate::logger::Logger;
 use crate::{bus::Bus, join_half_words, split_word, HalfWord, Word};
 use anyhow::Result;
 
@@ -104,16 +105,24 @@ impl FlagRegister {
 const INIT_PC: Word = 0x100;
 const INIT_SP: Word = 0xFFFE;
 
-pub struct Cpu {
+pub struct Cpu<L>
+where
+    L: Logger + ?Sized,
+{
+    logger: Box<L>,
     registers: Registers,
     pc: Word,
     sp: Word,
     bus: Bus,
 }
 
-impl Cpu {
-    pub fn new(bus: Bus) -> Cpu {
+impl<L> Cpu<L>
+where
+    L: Logger + ?Sized,
+{
+    pub fn new(logger: Box<L>, bus: Bus) -> Self {
         Cpu {
+            logger,
             pc: INIT_PC,
             sp: INIT_SP,
             registers: Registers {
