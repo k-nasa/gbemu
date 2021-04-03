@@ -179,15 +179,15 @@ impl Cpu {
             }
             0x09 => self.addhl_rr(TargetRegister::B, TargetRegister::C), // ADD HL, BC
             0x0A => self.ldr_rr(TargetRegister::A, TargetRegister::B, TargetRegister::C), // LD A, (BC)
-            0xB => self.dec_u16(TargetRegister::B, TargetRegister::C),                    // DEC BC
-            0xC => self.inc_u8(TargetRegister::C),                                        // INC C
-            0xD => self.dec_u8(TargetRegister::C),                                        // DEC C
-            0xE => {
+            0x0B => self.dec_u16(TargetRegister::B, TargetRegister::C),                   // DEC BC
+            0x0C => self.inc_u8(TargetRegister::C),                                       // INC C
+            0x0D => self.dec_u8(TargetRegister::C),                                       // DEC C
+            0x0E => {
                 // LD C,u8
                 let operands = self.fetch_operands(1);
                 self.ldn_u8(TargetRegister::C, operands)
             }
-            0xF => self.rrca(), // RRCA
+            0x0F => self.rrca(), // RRCA
 
             //  ------------ 0X1N ----------------
             0x10 => todo!(), // 0x10, "STOP", 1, 0, func(cpu *CPU, operands []byte) { cpu.stop() }},
