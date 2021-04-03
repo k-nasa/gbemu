@@ -224,7 +224,11 @@ impl Cpu {
 
             //  ------------ 0X3N ----------------
             0x30 => todo!(),
-            0x31 => todo!(),
+            0x31 => {
+                // LD SP, u16
+                let operands = self.fetch_operands(2);
+                self.ldsp_u16(operands)
+            }
             0x32 => todo!(),
             0x33 => todo!(),
             0x34 => todo!(),
@@ -388,7 +392,11 @@ impl Cpu {
             0xC0 => todo!(),
             0xC1 => todo!(),
             0xC2 => todo!(),
-            0xC3 => todo!(),
+            0xC3 => {
+                // JP u16
+                let operands = self.fetch_operands(2);
+                self.jp_u16(operands);
+            }
             0xC4 => todo!(),
             0xC5 => todo!(),
             0xC6 => todo!(),
@@ -442,7 +450,7 @@ impl Cpu {
             0xF0 => todo!(),
             0xF1 => todo!(),
             0xF2 => todo!(),
-            0xF3 => todo!(),
+            0xF3 => { /*TODO 割り込み処理を実装したらDIも実装する*/ } // DI disable intruppt
             0xF4 => todo!(),
             0xF5 => todo!(),
             0xF6 => todo!(),
@@ -667,5 +675,12 @@ impl Cpu {
         }
 
         return added;
+    }
+
+    fn ldsp_u16(&mut self, operands: Operands) {
+        self.sp = join_half_words(operands[1], operands[0])
+    }
+    fn jp_u16(&mut self, operands: Operands) {
+        self.pc = join_half_words(operands[1], operands[0])
     }
 }
