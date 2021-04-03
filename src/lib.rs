@@ -1,5 +1,4 @@
-#![feature(const_fn_fn_ptr_basics)]
-#![feature(const_mut_refs)]
+#![feature(exclusive_range_pattern)]
 
 //! Game Boy emulator core implementation.
 

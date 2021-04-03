@@ -60,18 +60,28 @@ impl Bus {
     }
 
     pub fn read_byte(&self, address: Word) -> u8 {
-        // FIXME アドレスとデバイスの解決をメソッドに切り出して write_byteと共通化する
-        match address {
-            0x000..=0x7FFF => self.cartridge.read(address),
-            _ => todo!("read byte {:X}", address),
+        let device = Device::resolve_bus_address(address);
+
+        match device {
+            Device::HRam(address) => self.h_ram.read(address),
+            Device::OamRam(address) => self.oam_ram.read(address),
+            Device::MirrorRam(address) => self.mirror_ram.read(address),
+            Device::WorkingRam(address) => self.working_ram.read(address),
+            Device::VideoRam(address) => self.video_ram.read(address),
+            Device::Cartridge(address) => self.cartridge.read(address),
         }
     }
 
     pub fn write_byte(&mut self, address: Word, byte: HalfWord) {
-        // FIXME アドレスとデバイスの解決をメソッドに切り出して write_byteと共通化する
-        match address {
-            0x000..=0x7FFF => self.cartridge.write(address, byte),
-            _ => todo!("write byte {:X}", address),
+        let device = Device::resolve_bus_address(address);
+
+        match device {
+            Device::HRam(address) => self.h_ram.write(address, byte),
+            Device::OamRam(address) => self.oam_ram.write(address, byte),
+            Device::MirrorRam(address) => self.mirror_ram.write(address, byte),
+            Device::WorkingRam(address) => self.working_ram.write(address, byte),
+            Device::VideoRam(address) => self.video_ram.write(address, byte),
+            Device::Cartridge(address) => self.cartridge.write(address, byte),
         }
     }
 
@@ -80,5 +90,29 @@ impl Bus {
 
         self.write_byte(address, lower);
         self.write_byte(address + 1, upper);
+    }
+}
+
+type Address = Word;
+enum Device {
+    HRam(Address),
+    OamRam(Address),
+    MirrorRam(Address),
+    WorkingRam(Address),
+    VideoRam(Address),
+    Cartridge(Address),
+}
+
+impl Device {
+    pub fn resolve_bus_address(bus_address: Word) -> Device {
+        match bus_address {
+            0x0000..0x8000 => Device::Cartridge(bus_address),
+            0x8000..0xA000 => Device::VideoRam(bus_address),
+            0xC000..0xE000 => Device::WorkingRam(bus_address),
+            0xE000..0xFE00 => Device::MirrorRam(bus_address),
+            0xFE00..0xFEA0 => Device::OamRam(bus_address),
+            0xFF80..=0xFFFF => Device::HRam(bus_address),
+            _ => todo!("read byte {:X}", bus_address),
+        }
     }
 }
