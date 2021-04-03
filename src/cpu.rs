@@ -401,14 +401,14 @@ where
             0xA5 => todo!(),
             0xA6 => todo!(),
             0xA7 => todo!(),
-            0xA8 => todo!(),
-            0xA9 => todo!(),
-            0xAA => todo!(),
-            0xAB => todo!(),
-            0xAC => todo!(),
-            0xAD => todo!(),
-            0xAE => todo!(),
-            0xAF => todo!(),
+            0xA8 => self.xora_r(TargetRegister::B), // XOR A, B
+            0xA9 => self.xora_r(TargetRegister::C), // XOR A, C
+            0xAA => self.xora_r(TargetRegister::D), // XOR A, D
+            0xAB => self.xora_r(TargetRegister::E), // XOR A, E
+            0xAC => self.xora_r(TargetRegister::H), // XOR A, H
+            0xAD => self.xora_r(TargetRegister::L), // XOR A, L
+            0xAE => self.xora_u16(self.read_hl()),  // XOR A, (HL)
+            0xAF => self.xora_r(TargetRegister::A), // XOR A, A
 
             //  ------------ 0XBN ----------------
             0xB0 => todo!(),
@@ -681,10 +681,7 @@ where
     }
 
     fn addhl_rr(&mut self, upper_reg: TargetRegister, lower_reg: TargetRegister) {
-        let hl = join_half_words(
-            self.registers.read(TargetRegister::H),
-            self.registers.read(TargetRegister::L),
-        );
+        let hl = self.read_hl();
 
         let rr = join_half_words(
             self.registers.read(upper_reg),
@@ -738,7 +735,6 @@ where
         self.registers.write(TargetRegister::A, byte);
     }
 
-    // TODO !!!
     fn cp_u8(&mut self, operands: Operands) {
         self.registers.f.set_n(true);
 
@@ -769,5 +765,43 @@ where
         if flag == is_set {
             self.pc += n as u16;
         }
+    }
+
+    fn xora_r(&mut self, reg: TargetRegister) {
+        let byte = self.xor(
+            self.registers.read(reg),
+            self.registers.read(TargetRegister::A),
+        );
+
+        self.registers.write(TargetRegister::A, byte);
+    }
+
+    fn xora_u16(&mut self, addr: Word) {
+        let value = self.bus.read_byte(addr);
+        let byte = self.xor(self.registers.read(TargetRegister::A), value);
+
+        self.registers.write(TargetRegister::A, byte);
+    }
+
+    fn xor(&mut self, a: HalfWord, b: HalfWord) -> HalfWord {
+        self.registers.f.set_h(false);
+        self.registers.f.set_n(false);
+        self.registers.f.set_c(false);
+
+        let bit = a ^ b;
+        if bit == 0 {
+            self.registers.f.set_z(true)
+        } else {
+            self.registers.f.set_z(false)
+        }
+
+        bit
+    }
+
+    fn read_hl(&self) -> Word {
+        join_half_words(
+            self.registers.read(TargetRegister::H),
+            self.registers.read(TargetRegister::L),
+        )
     }
 }
