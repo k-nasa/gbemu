@@ -38,7 +38,7 @@ impl Registers {
         }
     }
 
-    pub fn read(&mut self, target: TargetRegister) -> HalfWord {
+    pub fn read(&self, target: TargetRegister) -> HalfWord {
         match target {
             TargetRegister::A => self.a,
             TargetRegister::B => self.b,
@@ -155,39 +155,17 @@ impl Cpu {
     // opcode list https://izik1.github.io/gbops/
     fn execute(&mut self, opcode: Opecode) -> Result<()> {
         match opcode {
-            0x00 => {
-                // NOP
-            }
+            //  ------------ 0x0N ----------------
+            0x00 => {} // NOP
             0x01 => {
                 // LD BC, u16
                 let operands = self.fetch_operands(2);
                 self.ldn_u16(TargetRegister::B, TargetRegister::C, operands)
             }
-            0x02 => {
-                // LD (BC),A
-                self.ldrr_r(TargetRegister::B, TargetRegister::C, TargetRegister::A);
-            }
-            0x03 => {
-                // INC BC
-                self.inc_u16(TargetRegister::B, TargetRegister::C);
-            }
-            0x04 => {
-                // INC B
-                self.inc_u8(TargetRegister::B);
-            }
-
-            // 0x7, "RLCA", 0, 1, func(cpu *CPU, operands []byte) { cpu.rlca() }},
-            // 0x8, "LD (nn),SP", 2, 5, func(cpu *CPU, operands []byte) { cpu.ldnn_sp(operands) }},
-            // 0x9, "ADD HL,BC", 0, 2, func(cpu *CPU, operands []byte) { cpu.addhl_rr(&cpu.Regs.B, &cpu.Regs.C) }},
-            // 0xA, "LD A,(BC)", 0, 2, func(cpu *CPU, operands []byte) { cpu.ldr_rr(cpu.Regs.B, cpu.Regs.C, &cpu.Regs.A) }},
-            // 0xB, "DEC BC", 0, 2, func(cpu *CPU, operands []byte) { cpu.dec_nn(&cpu.Regs.B, &cpu.Regs.C) }},
-            // 0xC, "INC C", 0, 1, func(cpu *CPU, operands []byte) { cpu.inc_n(&cpu.Regs.C) }},
-            // 0xD, "DEC C", 0, 1, func(cpu *CPU, operands []byte) { cpu.dec_n(&cpu.Regs.C) }},
-            // 0xE, "LD C,n", 1, 2, func(cpu *CPU, operands []byte) { cpu.ldnn_n(&cpu.Regs.C, operands) }},
-            0x05 => {
-                // DEC B
-                self.dec_u8(TargetRegister::B);
-            }
+            0x02 => self.ldrr_r(TargetRegister::B, TargetRegister::C, TargetRegister::A), // LD (BC),A
+            0x03 => self.inc_u16(TargetRegister::B, TargetRegister::C),                   // INC BC
+            0x04 => self.inc_u8(TargetRegister::B),                                       // INC B
+            0x05 => self.dec_u8(TargetRegister::B),                                       // DEC B
             0x06 => {
                 // LD B,u8
                 let operands = self.fetch_operands(1);
