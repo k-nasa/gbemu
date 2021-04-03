@@ -160,6 +160,8 @@ where
 
     // opcode list https://izik1.github.io/gbops/
     fn execute(&mut self, opcode: Opecode) -> Result<()> {
+        self.logger.trace(format!("opcode {:X}", opcode));
+
         match opcode {
             //  ------------ 0x0N ----------------
             0x00 => {} // NOP
@@ -456,7 +458,11 @@ where
             0xEF => todo!(),
 
             //  ------------ 0XFN ----------------
-            0xF0 => todo!(),
+            0xF0 => {
+                // LD A (0xFF00 + u8)
+                let operands = self.fetch_operands(1);
+                self.lda_u8(operands);
+            }
             0xF1 => todo!(),
             0xF2 => todo!(),
             0xF3 => { /*TODO 割り込み処理を実装したらDIも実装する*/ } // DI disable intruppt
@@ -691,5 +697,11 @@ where
     }
     fn jp_u16(&mut self, operands: Operands) {
         self.pc = join_half_words(operands[1], operands[0])
+    }
+    fn lda_u8(&mut self, operands: Operands) {
+        self.logger
+            .trace(format!("address {:X}", 0xFF00 + operands[0] as u16));
+        let byte = self.bus.read_byte(0xFF00 + operands[0] as u16);
+        self.registers.write(TargetRegister::A, byte);
     }
 }
