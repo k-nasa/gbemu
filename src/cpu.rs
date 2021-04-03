@@ -32,7 +32,6 @@ impl Registers {
             TargetRegister::C => self.c = half_word,
             TargetRegister::D => self.d = half_word,
             TargetRegister::E => self.e = half_word,
-            TargetRegister::F => todo!(),
             TargetRegister::H => self.h = half_word,
             TargetRegister::L => self.l = half_word,
         }
@@ -45,7 +44,6 @@ impl Registers {
             TargetRegister::C => self.c,
             TargetRegister::D => self.d,
             TargetRegister::E => self.e,
-            TargetRegister::F => todo!(),
             TargetRegister::H => self.h,
             TargetRegister::L => self.l,
         }
@@ -59,7 +57,6 @@ enum TargetRegister {
     C,
     D,
     E,
-    F,
     H,
     L,
 }
