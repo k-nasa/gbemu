@@ -263,8 +263,7 @@ impl Cpu {
             self.registers.f.set_z(false);
         }
 
-        // NOTE 後で調べる
-        if (incremented ^ 0x01 ^ byte) & 0x10 == 0x10 {
+        if byte & 0x10 != 0x10 && incremented & 0x10 == 0x10 {
             self.registers.f.set_h(true);
         } else {
             self.registers.f.set_h(false);
