@@ -1,8 +1,10 @@
 use crate::cartridge::Cartridge;
+use crate::ram::Ram;
 use crate::{split_word, HalfWord, Word};
 
 /// Memory map
 /// Ref http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
+/// Ref https://w.atwiki.jp/gbspec/pages/13.html
 ///```
 /// Interrupt Enable Register
 /// --------------------------- FFFF
@@ -30,19 +32,38 @@ use crate::{split_word, HalfWord, Word};
 /// --------------------------- 0000 --
 /// ```
 pub struct Bus {
+    h_ram: Ram,
+    oam_ram: Ram,
+    mirror_ram: Ram,
+    working_ram: Ram,
+    video_ram: Ram,
     cartridge: Cartridge,
 }
 
 impl Bus {
-    pub fn new(cartridge: Cartridge) -> Bus {
-        Bus { cartridge }
+    pub fn new(
+        cartridge: Cartridge,
+        video_ram: Ram,
+        h_ram: Ram,
+        oam_ram: Ram,
+        mirror_ram: Ram,
+        working_ram: Ram,
+    ) -> Bus {
+        Bus {
+            h_ram,
+            oam_ram,
+            working_ram,
+            mirror_ram,
+            cartridge,
+            video_ram,
+        }
     }
 
     pub fn read_byte(&self, address: Word) -> u8 {
         // FIXME アドレスとデバイスの解決をメソッドに切り出して write_byteと共通化する
         match address {
             0x000..=0x7FFF => self.cartridge.read(address),
-            _ => todo!(),
+            _ => todo!("read byte {:X}", address),
         }
     }
 
@@ -50,7 +71,7 @@ impl Bus {
         // FIXME アドレスとデバイスの解決をメソッドに切り出して write_byteと共通化する
         match address {
             0x000..=0x7FFF => self.cartridge.write(address, byte),
-            _ => todo!(),
+            _ => todo!("write byte {:X}", address),
         }
     }
 
