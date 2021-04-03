@@ -568,5 +568,5 @@ fn join_half_words(upper: HalfWord, lower: HalfWord) -> Word {
 }
 
 fn split_word(word: Word) -> (HalfWord, HalfWord) {
-    ((word >> 8) as HalfWord, (word ^ 0x00FF) as HalfWord)
+    ((word >> 8) as HalfWord, (word & 0x00FF) as HalfWord)
 }
