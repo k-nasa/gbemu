@@ -179,14 +179,8 @@ impl Cpu {
             }
             0x09 => self.addhl_rr(TargetRegister::B, TargetRegister::C), // ADD HL, BC
             0x0A => self.ldr_rr(TargetRegister::A, TargetRegister::B, TargetRegister::C), // LD A, (BC)
-            0xB => {
-                // DEC BC
-                // 0xB, "DEC BC", 0, 2, func(cpu *CPU, operands []byte) { cpu.dec_nn(&cpu.Regs.B, &cpu.Regs.C) }},
-            }
-            0xC => {
-                // INC C
-                // 0xC, "INC C", 0, 1, func(cpu *CPU, operands []byte) { cpu.inc_n(&cpu.Regs.C) }},
-            }
+            0xB => self.dec_u16(TargetRegister::B, TargetRegister::C),                    // DEC BC
+            0xC => self.inc_u8(TargetRegister::C),                                        // INC C
             0xD => {
                 // 0xD, "DEC C", 0, 1, func(cpu *CPU, operands []byte) { cpu.dec_n(&cpu.Regs.C) }},
             }
@@ -535,6 +529,16 @@ impl Cpu {
     fn inc_u16(&mut self, reg1: TargetRegister, reg2: TargetRegister) {
         let mut word = join_half_words(self.registers.read(reg1), self.registers.read(reg2));
         word += 1;
+
+        let (upper, lower) = split_word(word);
+
+        self.registers.write(reg1, upper);
+        self.registers.write(reg2, lower);
+    }
+
+    fn dec_u16(&mut self, reg1: TargetRegister, reg2: TargetRegister) {
+        let mut word = join_half_words(self.registers.read(reg1), self.registers.read(reg2));
+        word -= 1;
 
         let (upper, lower) = split_word(word);
 
