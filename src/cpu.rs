@@ -178,10 +178,7 @@ impl Cpu {
                 self.ldnn_sp(operands);
             }
             0x09 => self.addhl_rr(TargetRegister::B, TargetRegister::C), // ADD HL, BC
-            0x0A => {
-                // LD A, (BC)
-                // 0xA, "LD A,(BC)", 0, 2, func(cpu *CPU, operands []byte) { cpu.ldr_rr(cpu.Regs.B, cpu.Regs.C, &cpu.Regs.A) }},
-            }
+            0x0A => self.ldr_rr(TargetRegister::A, TargetRegister::B, TargetRegister::C), // LD A, (BC)
             0xB => {
                 // DEC BC
                 // 0xB, "DEC BC", 0, 2, func(cpu *CPU, operands []byte) { cpu.dec_nn(&cpu.Regs.B, &cpu.Regs.C) }},
@@ -518,6 +515,21 @@ impl Cpu {
 
         let byte = self.registers.read(byte_reg);
         self.bus.write_byte(address, byte);
+    }
+
+    fn ldr_rr(
+        &mut self,
+        dest_reg: TargetRegister,
+        upper_reg: TargetRegister,
+        lower_reg: TargetRegister,
+    ) {
+        let address = join_half_words(
+            self.registers.read(upper_reg),
+            self.registers.read(lower_reg),
+        );
+
+        let byte = self.bus.read_byte(address);
+        self.registers.write(dest_reg, byte);
     }
 
     fn inc_u16(&mut self, reg1: TargetRegister, reg2: TargetRegister) {
