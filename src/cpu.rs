@@ -175,9 +175,28 @@ impl Cpu {
                 // INC B
                 self.inc_u8(TargetRegister::B);
             }
-            0x05 => {}
-            0x06 => {}
-            0x07 => {}
+
+            // 0x7, "RLCA", 0, 1, func(cpu *CPU, operands []byte) { cpu.rlca() }},
+            // 0x8, "LD (nn),SP", 2, 5, func(cpu *CPU, operands []byte) { cpu.ldnn_sp(operands) }},
+            // 0x9, "ADD HL,BC", 0, 2, func(cpu *CPU, operands []byte) { cpu.addhl_rr(&cpu.Regs.B, &cpu.Regs.C) }},
+            // 0xA, "LD A,(BC)", 0, 2, func(cpu *CPU, operands []byte) { cpu.ldr_rr(cpu.Regs.B, cpu.Regs.C, &cpu.Regs.A) }},
+            // 0xB, "DEC BC", 0, 2, func(cpu *CPU, operands []byte) { cpu.dec_nn(&cpu.Regs.B, &cpu.Regs.C) }},
+            // 0xC, "INC C", 0, 1, func(cpu *CPU, operands []byte) { cpu.inc_n(&cpu.Regs.C) }},
+            // 0xD, "DEC C", 0, 1, func(cpu *CPU, operands []byte) { cpu.dec_n(&cpu.Regs.C) }},
+            // 0xE, "LD C,n", 1, 2, func(cpu *CPU, operands []byte) { cpu.ldnn_n(&cpu.Regs.C, operands) }},
+            0x05 => {
+                // DEC B
+                self.dec_u8(TargetRegister::B);
+            }
+            0x06 => {
+                // LD B,u8
+                let operands = self.fetch_operands(1);
+                self.ldn_u8(TargetRegister::B, operands)
+            }
+            0x07 => {
+                // RLCA, 0, 1
+                self.rlca();
+            }
             0x08 => {}
             0x09 => {}
             0x0A => {}
@@ -191,6 +210,12 @@ impl Cpu {
         self.registers.write(reg1, ops[1]);
         self.registers.write(reg2, ops[0]);
     }
+
+    fn ldn_u8(&mut self, reg: TargetRegister, ops: Operands) {
+        self.registers.write(reg, ops[0]);
+    }
+
+    fn rlca(&self) {}
 
     fn ldrr_r(
         &mut self,
