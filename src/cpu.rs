@@ -171,9 +171,9 @@ impl Cpu {
                 let operands = self.fetch_operands(1);
                 self.ldn_u8(TargetRegister::B, operands)
             }
-            0x07 => self.rlca(), // RLCA, 0, 1
+            0x07 => self.rlca(), // RLCA
             0x08 => {
-                // LD (nn), SP
+                // LD (u16), SP
                 let operands = self.fetch_operands(2);
                 self.ldnn_sp(operands);
             }
@@ -181,15 +181,13 @@ impl Cpu {
             0x0A => self.ldr_rr(TargetRegister::A, TargetRegister::B, TargetRegister::C), // LD A, (BC)
             0xB => self.dec_u16(TargetRegister::B, TargetRegister::C),                    // DEC BC
             0xC => self.inc_u8(TargetRegister::C),                                        // INC C
-            0xD => {
-                // 0xD, "DEC C", 0, 1, func(cpu *CPU, operands []byte) { cpu.dec_n(&cpu.Regs.C) }},
-            }
+            0xD => self.dec_u8(TargetRegister::C),                                        // DEC C
             0xE => {
-                // 0xE, "LD C,n", 1, 2, func(cpu *CPU, operands []byte) { cpu.ldnn_n(&cpu.Regs.C, operands) }},
+                // LD C,u8
+                let operands = self.fetch_operands(1);
+                self.ldn_u8(TargetRegister::C, operands)
             }
-            0xF => {
-                // 0xF, "RRCA", 0, 1, func(cpu *CPU, operands []byte) { cpu.rrca() }},
-            }
+            0xF => self.rrca(), // RRCA
 
             //  ------------ 0X1N ----------------
             0x10 => todo!(), // 0x10, "STOP", 1, 0, func(cpu *CPU, operands []byte) { cpu.stop() }},
@@ -483,6 +481,27 @@ impl Cpu {
         if byte & 0x80 == 0x80 {
             self.registers.f.set_c(true);
             shifted = shifted ^ 0x01;
+        } else {
+            self.registers.f.set_c(false);
+        }
+
+        if shifted == 0 {
+            self.registers.f.set_z(true);
+        }
+        self.registers.f.set_n(false);
+        self.registers.f.set_h(false);
+
+        self.registers.write(TargetRegister::A, shifted);
+    }
+
+    fn rrca(&mut self) {
+        let byte = self.registers.read(TargetRegister::A) << 1;
+        let mut shifted = byte >> 1;
+
+        // Shift and rotate bits
+        if byte & 0x01 == 0x01 {
+            self.registers.f.set_c(true);
+            shifted = shifted ^ 0x80;
         } else {
             self.registers.f.set_c(false);
         }
