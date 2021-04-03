@@ -83,7 +83,6 @@ impl Bus {
     pub fn write_byte(&mut self, address: Word, byte: HalfWord) {
         let device = Device::resolve_bus_address(address);
 
-        log::info!("{:?}", device);
         match device {
             Device::HRam(address) => self.h_ram.write(address, byte),
             Device::OamRam(address) => self.oam_ram.write(address, byte),
@@ -122,7 +121,7 @@ impl Device {
         match addr {
             0x0000..0x8000 => Device::Cartridge(addr),
             0x8000..0xA000 => Device::VideoRam(addr - 0x8000),
-            0xA000..0xC000 => Device::Cartridge(addr - 0xA000), // FIXME ちゃんとしたアドレスにする
+            0xA000..0xC000 => Device::Cartridge(addr), // FIXME ちゃんとしたアドレスにする
             0xC000..0xE000 => Device::WorkingRam(addr - 0xC000),
             0xE000..0xFE00 => Device::MirrorRam(addr - 0xE000),
             0xFE00..0xFEA0 => Device::OamRam(addr - 0xFE00),

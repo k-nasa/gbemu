@@ -788,9 +788,8 @@ where
     fn jp_u16(&mut self, operands: Operands) {
         self.pc = join_half_words(operands[1], operands[0])
     }
+
     fn lda_u8(&mut self, operands: Operands) {
-        self.logger
-            .trace(format!("address {:X}", 0xFF00 + operands[0] as u16));
         let byte = self.bus.read_byte(0xFF00 + operands[0] as u16);
         self.registers.write(TargetRegister::A, byte);
     }
