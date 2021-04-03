@@ -99,6 +99,19 @@ impl FlagRegister {
     pub fn set_c(&mut self, flag: bool) {
         self.c = flag
     }
+
+    pub fn get_z(&self) -> bool {
+        self.z
+    }
+    pub fn get_n(&self) -> bool {
+        self.n
+    }
+    pub fn get_h(&self) -> bool {
+        self.h
+    }
+    pub fn get_c(&self) -> bool {
+        self.c
+    }
 }
 
 // ref http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
@@ -216,7 +229,11 @@ where
             0x1F => todo!(),
 
             //  ------------ 0X2N ----------------
-            0x20 => todo!(),
+            0x20 => {
+                // JR NZ, u8
+                let operands = self.fetch_operands(1);
+                self.jrcc_i8(self.registers.f.get_z(), false, operands);
+            }
             0x21 => todo!(),
             0x22 => todo!(),
             0x23 => todo!(),
@@ -224,7 +241,11 @@ where
             0x25 => todo!(),
             0x26 => todo!(),
             0x27 => todo!(),
-            0x28 => todo!(),
+            0x28 => {
+                // JR Z, u8
+                let operands = self.fetch_operands(1);
+                self.jrcc_i8(self.registers.f.get_z(), true, operands);
+            }
             0x29 => todo!(),
             0x2A => todo!(),
             0x2B => todo!(),
@@ -234,7 +255,11 @@ where
             0x2F => todo!(),
 
             //  ------------ 0X3N ----------------
-            0x30 => todo!(),
+            0x30 => {
+                // JR NC, u8
+                let operands = self.fetch_operands(1);
+                self.jrcc_i8(self.registers.f.get_c(), false, operands);
+            }
             0x31 => {
                 // LD SP, u16
                 let operands = self.fetch_operands(2);
@@ -246,7 +271,11 @@ where
             0x35 => todo!(),
             0x36 => todo!(),
             0x37 => todo!(),
-            0x38 => todo!(),
+            0x38 => {
+                // JR C, u8
+                let operands = self.fetch_operands(1);
+                self.jrcc_i8(self.registers.f.get_c(), true, operands);
+            }
             0x39 => todo!(),
             0x3A => todo!(),
             0x3B => todo!(),
@@ -476,7 +505,11 @@ where
             0xFB => todo!(),
             0xFC => todo!(),
             0xFD => todo!(),
-            0xFE => todo!(),
+            0xFE => {
+                // CP A, u8
+                let operands = self.fetch_operands(1);
+                self.cp_u8(operands);
+            }
             0xFF => todo!(),
             // _ => bail!("not implemented opcode {:X}", opcode),
         }
@@ -703,5 +736,38 @@ where
             .trace(format!("address {:X}", 0xFF00 + operands[0] as u16));
         let byte = self.bus.read_byte(0xFF00 + operands[0] as u16);
         self.registers.write(TargetRegister::A, byte);
+    }
+
+    // TODO !!!
+    fn cp_u8(&mut self, operands: Operands) {
+        self.registers.f.set_n(true);
+
+        let value = operands[0];
+        let a = self.registers.read(TargetRegister::A);
+
+        if a & 0xF0 < value & 0xF0 {
+            self.registers.f.set_h(true)
+        } else {
+            self.registers.f.set_h(false)
+        }
+
+        if a < value {
+            self.registers.f.set_c(true)
+        } else {
+            self.registers.f.set_c(false)
+        }
+
+        if let (_, true) = a.overflowing_sub(value) {
+            self.registers.f.set_z(true)
+        } else {
+            self.registers.f.set_z(false)
+        }
+    }
+    fn jrcc_i8(&mut self, flag: bool, is_set: bool, operands: Operands) {
+        let n = operands[0];
+
+        if flag == is_set {
+            self.pc += n as u16;
+        }
     }
 }
