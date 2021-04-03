@@ -469,9 +469,13 @@ where
             0xDF => todo!(),
 
             //  ------------ 0XEN ----------------
-            0xE0 => todo!(),
+            0xE0 => {
+                // LD (FF00+u8),A
+                let operands = self.fetch_operands(1);
+                self.ldn_a(operands);
+            }
             0xE1 => todo!(),
-            0xE2 => todo!(),
+            0xE2 => self.ldc_a(), // LD (0xFF00+C),A
             0xE3 => todo!(),
             0xE4 => todo!(),
             0xE5 => todo!(),
@@ -490,10 +494,10 @@ where
             0xF0 => {
                 // LD A (0xFF00 + u8)
                 let operands = self.fetch_operands(1);
-                self.lda_u8(operands);
+                self.ldu8_a(operands);
             }
             0xF1 => todo!(),
-            0xF2 => todo!(),
+            0xF2 => self.lda_c(), // LD A, (0xFF00+C)
             0xF3 => { /*TODO 割り込み処理を実装したらDIも実装する*/ } // DI disable intruppt
             0xF4 => todo!(),
             0xF5 => todo!(),
@@ -524,6 +528,32 @@ where
 
     fn ldn_u8(&mut self, reg: TargetRegister, ops: Operands) {
         self.registers.write(reg, ops[0]);
+    }
+
+    fn ldn_a(&mut self, operands: Operands) {
+        self.bus.write_byte(
+            0xFF00 + operands[0] as u16,
+            self.registers.read(TargetRegister::A),
+        )
+    }
+
+    fn ldu8_a(&mut self, operands: Operands) {
+        let byte = self.bus.read_byte(0xFF00 + operands[0] as u16);
+        self.registers.write(TargetRegister::A, byte);
+    }
+
+    fn ldc_a(&mut self) {
+        self.bus.write_byte(
+            0xFF00 + self.registers.read(TargetRegister::C) as u16,
+            self.registers.read(TargetRegister::A),
+        )
+    }
+
+    fn lda_c(&mut self) {
+        let byte = self
+            .bus
+            .read_byte(0xFF00 + self.registers.read(TargetRegister::C) as u16);
+        self.registers.write(TargetRegister::A, byte);
     }
 
     fn rlca(&mut self) {
