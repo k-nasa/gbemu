@@ -24,12 +24,12 @@ fn main() -> Result<()> {
     info!("loading file {}", filename);
     let bytes = std::fs::read(filename).unwrap();
 
-    // FIXME サイズは適当に決めているのでちゃんとした値に治す
-    let video_ram = Ram::with_size(1024);
-    let h_ram = Ram::with_size(1024);
-    let oam_ram = Ram::with_size(1024);
-    let mirror_ram = Ram::with_size(1024);
-    let working_ram = Ram::with_size(1024);
+    // NOTE https://w.atwiki.jp/gbspec/pages/13.html サイズはこれを見て決めた
+    let video_ram = Ram::with_size(0x2000);
+    let h_ram = Ram::with_size(0x2000);
+    let oam_ram = Ram::with_size(0x2000);
+    let mirror_ram = Ram::with_size(0x2000);
+    let working_ram = Ram::with_size(0x2000);
     let cartridge = Cartridge::new(bytes);
     let gpu = Gpu::with_size(1024); // TODO implement
     let bus = Bus::new(

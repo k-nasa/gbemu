@@ -74,12 +74,16 @@ impl Bus {
             Device::VideoRam(address) => self.video_ram.read(address),
             Device::Cartridge(address) => self.cartridge.read(address),
             Device::Gpu(address) => self.gpu.read(address),
+            Device::Unimplement => {
+                0 /* TODO impl */
+            }
         }
     }
 
     pub fn write_byte(&mut self, address: Word, byte: HalfWord) {
         let device = Device::resolve_bus_address(address);
 
+        log::info!("{:?}", device);
         match device {
             Device::HRam(address) => self.h_ram.write(address, byte),
             Device::OamRam(address) => self.oam_ram.write(address, byte),
@@ -88,6 +92,7 @@ impl Bus {
             Device::VideoRam(address) => self.video_ram.write(address, byte),
             Device::Cartridge(address) => self.cartridge.write(address, byte),
             Device::Gpu(address) => self.gpu.write(address, byte),
+            Device::Unimplement => { /* TODO impl */ }
         }
     }
 
@@ -100,6 +105,7 @@ impl Bus {
 }
 
 type Address = Word;
+#[derive(Debug)]
 enum Device {
     HRam(Address),
     OamRam(Address),
@@ -108,6 +114,7 @@ enum Device {
     VideoRam(Address),
     Cartridge(Address),
     Gpu(Address),
+    Unimplement,
 }
 
 impl Device {
@@ -115,11 +122,13 @@ impl Device {
         match addr {
             0x0000..0x8000 => Device::Cartridge(addr),
             0x8000..0xA000 => Device::VideoRam(addr - 0x8000),
+            0xA000..0xC000 => Device::Cartridge(addr - 0xA000), // FIXME ちゃんとしたアドレスにする
             0xC000..0xE000 => Device::WorkingRam(addr - 0xC000),
             0xE000..0xFE00 => Device::MirrorRam(addr - 0xE000),
             0xFE00..0xFEA0 => Device::OamRam(addr - 0xFE00),
             0xFF80..=0xFFFF => Device::HRam(addr - 0xFF80),
             0xFF40..0xFF80 => Device::Gpu(addr - 0xFF40),
+            0xFF0F => Device::Unimplement,
             _ => todo!("read byte {:X}", addr),
         }
     }

@@ -212,14 +212,22 @@ where
 
             //  ------------ 0X1N ----------------
             0x10 => todo!(), // 0x10, "STOP", 1, 0, func(cpu *CPU, operands []byte) { cpu.stop() }},
-            0x11 => todo!(),
+            0x11 => {
+                // LD DE, u16
+                let operands = self.fetch_operands(2);
+                self.ldn_u16(TargetRegister::D, TargetRegister::E, operands)
+            }
             0x12 => todo!(),
             0x13 => todo!(),
             0x14 => todo!(),
             0x15 => todo!(),
             0x16 => todo!(),
             0x17 => todo!(),
-            0x18 => todo!(),
+            0x18 => {
+                // JR i8
+                let operands = self.fetch_operands(1);
+                self.jr_i8(operands);
+            }
             0x19 => todo!(),
             0x1A => todo!(),
             0x1B => todo!(),
@@ -234,8 +242,13 @@ where
                 let operands = self.fetch_operands(1);
                 self.jrcc_i8(self.registers.f.get_z(), false, operands);
             }
-            0x21 => todo!(),
-            0x22 => todo!(),
+            0x21 => {
+                // LD HL, u16
+                let operands = self.fetch_operands(2);
+                self.ldn_u16(TargetRegister::H, TargetRegister::L, operands)
+            }
+            0x22 => self.ld_inc_hl_a(),
+            // LD (HL+), A
             0x23 => todo!(),
             0x24 => todo!(),
             0x25 => todo!(),
@@ -429,7 +442,7 @@ where
             0xBF => todo!(),
 
             //  ------------ 0XCN ----------------
-            0xC0 => todo!(),
+            0xC0 => self.retcc(self.registers.f.get_z(), false), // RET NZ
             0xC1 => todo!(),
             0xC2 => todo!(),
             0xC3 => {
@@ -437,33 +450,53 @@ where
                 let operands = self.fetch_operands(2);
                 self.jp_u16(operands);
             }
-            0xC4 => todo!(),
+            0xC4 => {
+                // CALL NZ, u16 - 0xCD
+                let operands = self.fetch_operands(2);
+                self.callcc_u16(self.registers.f.get_z(), false, operands);
+            }
             0xC5 => todo!(),
             0xC6 => todo!(),
             0xC7 => todo!(),
-            0xC8 => todo!(),
-            0xC9 => todo!(),
+            0xC8 => self.retcc(self.registers.f.get_z(), true), // RET Z
+            0xC9 => self.ret(),                                 // RET
             0xCA => todo!(),
             0xCB => todo!(),
-            0xCC => todo!(),
-            0xCD => todo!(),
+            0xCC => {
+                // CALL Z, u16
+                let operands = self.fetch_operands(2);
+                self.callcc_u16(self.registers.f.get_z(), true, operands);
+            }
+            0xCD => {
+                // CALL u16 - 0xCD
+                let operands = self.fetch_operands(2);
+                self.call_u16(operands);
+            }
             0xCE => todo!(),
             0xCF => todo!(),
 
             //  ------------ 0XDN ----------------
-            0xD0 => todo!(),
+            0xD0 => self.retcc(self.registers.f.get_c(), false), // RET NC
             0xD1 => todo!(),
             0xD2 => todo!(),
             0xD3 => todo!(),
-            0xD4 => todo!(),
+            0xD4 => {
+                // CALL NC, u16 - 0xCD
+                let operands = self.fetch_operands(2);
+                self.callcc_u16(self.registers.f.get_c(), false, operands);
+            }
             0xD5 => todo!(),
             0xD6 => todo!(),
             0xD7 => todo!(),
-            0xD8 => todo!(),
+            0xD8 => self.retcc(self.registers.f.get_c(), true), // RET C
             0xD9 => todo!(),
             0xDA => todo!(),
             0xDB => todo!(),
-            0xDC => todo!(),
+            0xDC => {
+                // CALL C, u16 - 0xCD
+                let operands = self.fetch_operands(2);
+                self.callcc_u16(self.registers.f.get_c(), true, operands);
+            }
             0xDD => todo!(),
             0xDE => todo!(),
             0xDF => todo!(),
@@ -684,7 +717,7 @@ where
     }
 
     fn dec(&mut self, byte: HalfWord) -> HalfWord {
-        let decremented = byte - 1;
+        let decremented = byte.wrapping_sub(1);
 
         self.registers.f.set_n(true);
 
@@ -719,10 +752,7 @@ where
         );
 
         let result = self.add_words(hl, rr);
-        let (upper, lower) = split_word(result);
-
-        self.registers.write(TargetRegister::H, upper);
-        self.registers.write(TargetRegister::L, lower);
+        self.set_hl(result);
     }
 
     fn add_words(&mut self, a: Word, b: Word) -> Word {
@@ -789,12 +819,37 @@ where
             self.registers.f.set_z(false)
         }
     }
+
     fn jrcc_i8(&mut self, flag: bool, is_set: bool, operands: Operands) {
-        let n = operands[0];
+        let n = operands[0] as i8;
 
         if flag == is_set {
+            if n < 0 {
+                self.pc -= -n as u16;
+            } else {
+                self.pc += n as u16;
+            }
+        }
+    }
+
+    fn jr_i8(&mut self, operands: Operands) {
+        let n = operands[0] as i8;
+
+        if n < 0 {
+            self.pc -= -n as u16;
+        } else {
             self.pc += n as u16;
         }
+    }
+
+    fn ld_inc_hl_a(&mut self) {
+        let mut addr = self.read_hl();
+
+        self.bus
+            .write_byte(addr, self.registers.read(TargetRegister::A));
+        addr += 1;
+
+        self.set_hl(addr);
     }
 
     fn xora_r(&mut self, reg: TargetRegister) {
@@ -828,10 +883,55 @@ where
         bit
     }
 
+    fn ret(&mut self) {
+        let (upper, lower) = (self.pop(), self.pop());
+
+        self.pc = join_half_words(upper, lower);
+    }
+
+    fn retcc(&mut self, flag: bool, is_set: bool) {
+        if flag == is_set {
+            self.ret();
+        }
+    }
+
+    fn call_u16(&mut self, operands: Operands) {
+        let (upper, lower) = (self.pc >> 8, self.pc & 0xFF);
+        self.push(upper as u8);
+        self.push(lower as u8);
+
+        self.pc = join_half_words(operands[1], operands[0])
+    }
+
+    fn callcc_u16(&mut self, flag: bool, is_set: bool, operands: Operands) {
+        if flag == is_set {
+            self.call_u16(operands);
+        }
+    }
+
+    fn push(&mut self, half_word: HalfWord) {
+        self.sp -= 1;
+        self.bus.write_byte(self.sp, half_word)
+    }
+
+    fn pop(&mut self) -> HalfWord {
+        let byte = self.bus.read_byte(self.sp);
+        self.sp += 1;
+
+        byte
+    }
+
     fn read_hl(&self) -> Word {
         join_half_words(
             self.registers.read(TargetRegister::H),
             self.registers.read(TargetRegister::L),
         )
+    }
+
+    fn set_hl(&mut self, word: Word) {
+        let (upper, lower) = split_word(word);
+
+        self.registers.write(TargetRegister::H, upper);
+        self.registers.write(TargetRegister::L, lower);
     }
 }
