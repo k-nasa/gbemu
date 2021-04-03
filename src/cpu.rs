@@ -1,5 +1,5 @@
-use crate::{bus::Bus, HalfWord, Word};
-use anyhow::{bail, Result};
+use crate::{bus::Bus, join_half_words, split_word, HalfWord, Word};
+use anyhow::Result;
 
 type Opecode = u8;
 type Operands = Vec<u8>;
@@ -671,12 +671,4 @@ impl Cpu {
 
         return added;
     }
-}
-
-fn join_half_words(upper: HalfWord, lower: HalfWord) -> Word {
-    (upper as u16) << 8 ^ lower as u16
-}
-
-fn split_word(word: Word) -> (HalfWord, HalfWord) {
-    ((word >> 8) as HalfWord, (word & 0x00FF) as HalfWord)
 }

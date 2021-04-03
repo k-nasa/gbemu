@@ -1,5 +1,5 @@
 use crate::cartridge::Cartridge;
-use crate::{HalfWord, Word};
+use crate::{split_word, HalfWord, Word};
 
 /// Memory map
 /// Ref http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
@@ -60,8 +60,4 @@ impl Bus {
         self.write_byte(address, lower);
         self.write_byte(address + 1, upper);
     }
-}
-
-fn split_word(word: Word) -> (HalfWord, HalfWord) {
-    ((word >> 8) as HalfWord, (word & 0x00FF) as HalfWord)
 }
