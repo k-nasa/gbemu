@@ -174,7 +174,8 @@ impl Cpu {
             0x07 => self.rlca(), // RLCA, 0, 1
             0x08 => {
                 // LD (nn), SP
-                // 0x8, "LD (nn),SP", 2, 5, func(cpu *CPU, operands []byte) { cpu.ldnn_sp(operands) }},
+                let operands = self.fetch_operands(2);
+                self.ldnn_sp(operands);
             }
             0x09 => {
                 // ADD HL, BC
@@ -560,6 +561,11 @@ impl Cpu {
         }
 
         return incremented;
+    }
+    fn ldnn_sp(&mut self, operands: Operands) {
+        let address = join_half_words(operands[1], operands[0]);
+
+        self.bus.write_word(address, self.sp);
     }
 }
 

@@ -53,4 +53,15 @@ impl Bus {
             _ => todo!(),
         }
     }
+
+    pub fn write_word(&mut self, address: Word, word: Word) {
+        let (upper, lower) = split_word(word);
+
+        self.write_byte(address, lower);
+        self.write_byte(address + 1, upper);
+    }
+}
+
+fn split_word(word: Word) -> (HalfWord, HalfWord) {
+    ((word >> 8) as HalfWord, (word & 0x00FF) as HalfWord)
 }
