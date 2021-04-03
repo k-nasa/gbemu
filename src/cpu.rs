@@ -161,7 +161,7 @@ impl Cpu {
             0x01 => {
                 // LD BC, u16
                 let operands = self.fetch_operands(2);
-                self.ldnn_u16(TargetRegister::B, TargetRegister::C, operands)
+                self.ldn_u16(TargetRegister::B, TargetRegister::C, operands)
             }
             0x02 => {
                 // LD (BC),A
@@ -187,7 +187,7 @@ impl Cpu {
         Ok(())
     }
 
-    fn ldnn_u16(&mut self, reg1: TargetRegister, reg2: TargetRegister, ops: Operands) {
+    fn ldn_u16(&mut self, reg1: TargetRegister, reg2: TargetRegister, ops: Operands) {
         self.registers.write(reg1, ops[1]);
         self.registers.write(reg2, ops[0]);
     }
