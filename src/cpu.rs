@@ -88,6 +88,19 @@ impl FlagRegister {
             c: (byte >> 3) == 1,
         }
     }
+
+    pub fn set_z(&mut self, flag: bool) {
+        self.z = flag
+    }
+    pub fn set_n(&mut self, flag: bool) {
+        self.n = flag
+    }
+    pub fn set_h(&mut self, flag: bool) {
+        self.h = flag
+    }
+    pub fn set_c(&mut self, flag: bool) {
+        self.c = flag
+    }
 }
 
 // ref http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
