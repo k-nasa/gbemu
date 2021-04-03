@@ -1,6 +1,7 @@
 use gbemu::bus::Bus;
 use gbemu::cartridge::Cartridge;
 use gbemu::emulator::Emulator;
+use gbemu::ram::Ram;
 use log::info;
 
 use anyhow::Result;
@@ -22,7 +23,22 @@ fn main() -> Result<()> {
     info!("loading file {}", filename);
     let bytes = std::fs::read(filename).unwrap();
 
-    let bus = Bus::new(Cartridge::new(bytes));
+    // FIXME サイズは適当に決めているのでちゃんとした値に治す
+    let video_ram = Ram::with_size(1024);
+    let h_ram = Ram::with_size(1024);
+    let oam_ram = Ram::with_size(1024);
+    let mirror_ram = Ram::with_size(1024);
+    let working_ram = Ram::with_size(1024);
+    let cartridge = Cartridge::new(bytes);
+    let bus = Bus::new(
+        cartridge,
+        video_ram,
+        h_ram,
+        oam_ram,
+        mirror_ram,
+        working_ram,
+    );
+
     let emu = Emulator::new(bus);
 
     info!("start emulator");
