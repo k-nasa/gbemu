@@ -177,10 +177,7 @@ impl Cpu {
                 let operands = self.fetch_operands(2);
                 self.ldnn_sp(operands);
             }
-            0x09 => {
-                // ADD HL, BC
-                // 0x9, "ADD HL,BC", 0, 2, func(cpu *CPU, operands []byte) { cpu.addhl_rr(&cpu.Regs.B, &cpu.Regs.C) }},
-            }
+            0x09 => self.addhl_rr(TargetRegister::B, TargetRegister::C), // ADD HL, BC
             0x0A => {
                 // LD A, (BC)
                 // 0xA, "LD A,(BC)", 0, 2, func(cpu *CPU, operands []byte) { cpu.ldr_rr(cpu.Regs.B, cpu.Regs.C, &cpu.Regs.A) }},
@@ -562,10 +559,56 @@ impl Cpu {
 
         return incremented;
     }
+
     fn ldnn_sp(&mut self, operands: Operands) {
         let address = join_half_words(operands[1], operands[0]);
 
         self.bus.write_word(address, self.sp);
+    }
+
+    fn addhl_rr(&mut self, upper_reg: TargetRegister, lower_reg: TargetRegister) {
+        let hl = join_half_words(
+            self.registers.read(TargetRegister::H),
+            self.registers.read(TargetRegister::L),
+        );
+
+        let rr = join_half_words(
+            self.registers.read(upper_reg),
+            self.registers.read(lower_reg),
+        );
+
+        let result = self.add_words(hl, rr);
+        let (upper, lower) = split_word(result);
+
+        self.registers.write(TargetRegister::H, upper);
+        self.registers.write(TargetRegister::L, lower);
+    }
+
+    fn add_words(&mut self, a: Word, b: Word) -> Word {
+        let (added, overflow) = a.overflowing_add(b);
+
+        self.registers.f.set_n(false);
+
+        if overflow {
+            self.registers.f.set_c(true)
+        } else {
+            self.registers.f.set_c(false)
+        }
+
+        if added == 0 {
+            self.registers.f.set_z(true);
+        } else {
+            self.registers.f.set_z(false);
+        }
+
+        // FIXME わかりやすくしたい。というかあんまり理解できてない
+        if (added ^ a ^ b) & 0x1000 == 0x1000 {
+            self.registers.f.set_h(true);
+        } else {
+            self.registers.f.set_h(false);
+        }
+
+        return added;
     }
 }
 
