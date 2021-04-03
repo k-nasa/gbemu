@@ -1,4 +1,5 @@
 use crate::cartridge::Cartridge;
+use crate::gpu::Gpu;
 use crate::ram::Ram;
 use crate::{split_word, HalfWord, Word};
 
@@ -38,6 +39,7 @@ pub struct Bus {
     working_ram: Ram,
     video_ram: Ram,
     cartridge: Cartridge,
+    gpu: Gpu,
 }
 
 impl Bus {
@@ -48,6 +50,7 @@ impl Bus {
         oam_ram: Ram,
         mirror_ram: Ram,
         working_ram: Ram,
+        gpu: Gpu,
     ) -> Bus {
         Bus {
             h_ram,
@@ -56,6 +59,7 @@ impl Bus {
             mirror_ram,
             cartridge,
             video_ram,
+            gpu,
         }
     }
 
@@ -69,6 +73,7 @@ impl Bus {
             Device::WorkingRam(address) => self.working_ram.read(address),
             Device::VideoRam(address) => self.video_ram.read(address),
             Device::Cartridge(address) => self.cartridge.read(address),
+            Device::Gpu(address) => self.gpu.read(address),
         }
     }
 
@@ -82,6 +87,7 @@ impl Bus {
             Device::WorkingRam(address) => self.working_ram.write(address, byte),
             Device::VideoRam(address) => self.video_ram.write(address, byte),
             Device::Cartridge(address) => self.cartridge.write(address, byte),
+            Device::Gpu(address) => self.gpu.write(address, byte),
         }
     }
 
@@ -101,18 +107,20 @@ enum Device {
     WorkingRam(Address),
     VideoRam(Address),
     Cartridge(Address),
+    Gpu(Address),
 }
 
 impl Device {
-    pub fn resolve_bus_address(bus_address: Word) -> Device {
-        match bus_address {
-            0x0000..0x8000 => Device::Cartridge(bus_address),
-            0x8000..0xA000 => Device::VideoRam(bus_address),
-            0xC000..0xE000 => Device::WorkingRam(bus_address),
-            0xE000..0xFE00 => Device::MirrorRam(bus_address),
-            0xFE00..0xFEA0 => Device::OamRam(bus_address),
-            0xFF80..=0xFFFF => Device::HRam(bus_address),
-            _ => todo!("read byte {:X}", bus_address),
+    pub fn resolve_bus_address(addr: Word) -> Device {
+        match addr {
+            0x0000..0x8000 => Device::Cartridge(addr),
+            0x8000..0xA000 => Device::VideoRam(addr - 0x8000),
+            0xC000..0xE000 => Device::WorkingRam(addr - 0xC000),
+            0xE000..0xFE00 => Device::MirrorRam(addr - 0xE000),
+            0xFE00..0xFEA0 => Device::OamRam(addr - 0xFE00),
+            0xFF80..=0xFFFF => Device::HRam(addr - 0xFF80),
+            0xFF40..0xFF80 => Device::Gpu(addr - 0xFF40),
+            _ => todo!("read byte {:X}", addr),
         }
     }
 }

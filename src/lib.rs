@@ -6,6 +6,7 @@ pub mod bus;
 pub mod cartridge;
 pub(crate) mod cpu;
 pub mod emulator;
+pub mod gpu;
 pub(crate) mod logger;
 pub mod ram;
 

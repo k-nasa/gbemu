@@ -1,6 +1,7 @@
 use gbemu::bus::Bus;
 use gbemu::cartridge::Cartridge;
 use gbemu::emulator::Emulator;
+use gbemu::gpu::Gpu;
 use gbemu::ram::Ram;
 use log::info;
 
@@ -30,6 +31,7 @@ fn main() -> Result<()> {
     let mirror_ram = Ram::with_size(1024);
     let working_ram = Ram::with_size(1024);
     let cartridge = Cartridge::new(bytes);
+    let gpu = Gpu::with_size(1024); // TODO implement
     let bus = Bus::new(
         cartridge,
         video_ram,
@@ -37,6 +39,7 @@ fn main() -> Result<()> {
         oam_ram,
         mirror_ram,
         working_ram,
+        gpu,
     );
 
     let emu = Emulator::new(bus);
