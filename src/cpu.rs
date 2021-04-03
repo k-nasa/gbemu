@@ -218,7 +218,34 @@ impl Cpu {
     }
 
     fn inc_u8(&mut self, reg: TargetRegister) {
-        todo!()
+        let i = self.registers.read(reg);
+        let incremented = self.inc(i);
+
+        self.registers.write(reg, incremented);
+    }
+
+    fn dec_u8(&mut self, reg: TargetRegister) {}
+
+    // TODO 動作が不安なのでテストコード書きたい
+    fn inc(&mut self, byte: HalfWord) -> HalfWord {
+        let incremented = byte + 1;
+
+        self.registers.f.set_n(false);
+
+        if incremented == 0 {
+            self.registers.f.set_z(true);
+        } else {
+            self.registers.f.set_z(false);
+        }
+
+        // NOTE 後で調べる
+        if (incremented ^ 0x01 ^ byte) & 0x10 == 0x10 {
+            self.registers.f.set_h(true);
+        } else {
+            self.registers.f.set_h(false);
+        }
+
+        return incremented;
     }
 }
 
