@@ -8,14 +8,14 @@ use log::info;
 use anyhow::Result;
 
 fn main() -> Result<()> {
-    if let Err(_) = std::env::var("RUST_LOG") {
+    if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", "info");
     }
     env_logger::init();
 
     let args: Vec<String> = std::env::args().collect();
 
-    if args.len() < 1 {
+    if args.is_empty() {
         anyhow::bail!("Plese speficy filepath")
     }
 

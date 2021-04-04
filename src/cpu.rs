@@ -103,12 +103,12 @@ impl FlagRegister {
     pub fn get_z(&self) -> bool {
         self.z
     }
-    pub fn get_n(&self) -> bool {
-        self.n
-    }
-    pub fn get_h(&self) -> bool {
-        self.h
-    }
+    // pub fn get_n(&self) -> bool {
+    //     self.n
+    // }
+    // pub fn get_h(&self) -> bool {
+    //     self.h
+    // }
     pub fn get_c(&self) -> bool {
         self.c
     }
@@ -155,7 +155,7 @@ where
     pub fn step(&mut self) -> Result<()> {
         let opcode = self.fetch();
 
-        self.execute(opcode)?;
+        self.execute(opcode);
 
         Ok(())
     }
@@ -172,7 +172,7 @@ where
     }
 
     // opcode list https://izik1.github.io/gbops/
-    fn execute(&mut self, opcode: Opecode) -> Result<()> {
+    fn execute(&mut self, opcode: Opecode) {
         self.logger.trace(format!("opcode {:X}", opcode));
 
         match opcode {
@@ -577,8 +577,6 @@ where
             0xFF => todo!(),
             // _ => bail!("not implemented opcode {:X}", opcode),
         }
-
-        Ok(())
     }
 
     fn ldn_u16(&mut self, reg1: TargetRegister, reg2: TargetRegister, ops: Operands) {
@@ -623,7 +621,7 @@ where
         // Shift and rotate bits
         if byte & 0x80 == 0x80 {
             self.registers.f.set_c(true);
-            shifted = shifted ^ 0x01;
+            shifted ^= 0x01;
         } else {
             self.registers.f.set_c(false);
         }
@@ -644,7 +642,7 @@ where
         // Shift and rotate bits
         if byte & 0x01 == 0x01 {
             self.registers.f.set_c(true);
-            shifted = shifted ^ 0x80;
+            shifted ^= 0x80;
         } else {
             self.registers.f.set_c(false);
         }
@@ -759,7 +757,7 @@ where
             self.registers.f.set_h(false);
         }
 
-        return incremented;
+        incremented
     }
 
     fn dec(&mut self, byte: HalfWord) -> HalfWord {
@@ -780,7 +778,7 @@ where
             self.registers.f.set_h(false);
         }
 
-        return decremented;
+        decremented
     }
 
     fn ldnn_sp(&mut self, operands: Operands) {
@@ -825,7 +823,7 @@ where
             self.registers.f.set_h(false);
         }
 
-        return added;
+        added
     }
 
     fn ldsp_u16(&mut self, operands: Operands) {
@@ -835,10 +833,10 @@ where
         self.pc = join_half_words(operands[1], operands[0])
     }
 
-    fn lda_u8(&mut self, operands: Operands) {
-        let byte = self.bus.read_byte(0xFF00 + operands[0] as u16);
-        self.registers.write(TargetRegister::A, byte);
-    }
+    // fn lda_u8(&mut self, operands: Operands) {
+    //     let byte = self.bus.read_byte(0xFF00 + operands[0] as u16);
+    //     self.registers.write(TargetRegister::A, byte);
+    // }
 
     fn cp_u8(&mut self, operands: Operands) {
         self.registers.f.set_n(true);
