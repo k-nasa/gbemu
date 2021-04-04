@@ -221,7 +221,11 @@ where
             0x13 => todo!(),
             0x14 => todo!(),
             0x15 => todo!(),
-            0x16 => todo!(),
+            0x16 => {
+                // LD D, u8
+                let operands = self.fetch_operands(1);
+                self.ldn_u8(TargetRegister::D, operands)
+            }
             0x17 => todo!(),
             0x18 => {
                 // JR i8
@@ -229,11 +233,15 @@ where
                 self.jr_i8(operands);
             }
             0x19 => todo!(),
-            0x1A => todo!(),
+            0x1A => self.ldr_rr(TargetRegister::A, TargetRegister::D, TargetRegister::E), // LD A, (DE)
             0x1B => todo!(),
             0x1C => todo!(),
             0x1D => todo!(),
-            0x1E => todo!(),
+            0x1E => {
+                // LD E,u8
+                let operands = self.fetch_operands(1);
+                self.ldn_u8(TargetRegister::E, operands)
+            }
             0x1F => todo!(),
 
             //  ------------ 0X2N ----------------
@@ -252,7 +260,11 @@ where
             0x23 => todo!(),
             0x24 => todo!(),
             0x25 => todo!(),
-            0x26 => todo!(),
+            0x26 => {
+                // LD E, u8
+                let operands = self.fetch_operands(1);
+                self.ldn_u8(TargetRegister::E, operands)
+            }
             0x27 => todo!(),
             0x28 => {
                 // JR Z, u8
@@ -260,11 +272,15 @@ where
                 self.jrcc_i8(self.registers.f.get_z(), true, operands);
             }
             0x29 => todo!(),
-            0x2A => todo!(),
+            0x2A => self.ld_inc_a_hl(), // LD A, (HL+)
             0x2B => todo!(),
             0x2C => todo!(),
             0x2D => todo!(),
-            0x2E => todo!(),
+            0x2E => {
+                // LD L,u8
+                let operands = self.fetch_operands(1);
+                self.ldn_u8(TargetRegister::L, operands)
+            }
             0x2F => todo!(),
 
             //  ------------ 0X3N ----------------
@@ -278,11 +294,15 @@ where
                 let operands = self.fetch_operands(2);
                 self.ldsp_u16(operands)
             }
-            0x32 => todo!(),
+            0x32 => self.ld_dec_hl_a(), // LD (HL-),A
             0x33 => todo!(),
             0x34 => todo!(),
             0x35 => todo!(),
-            0x36 => todo!(),
+            0x36 => {
+                // LD (HL),u8 - 0x36
+                let operands = self.fetch_operands(1);
+                self.ldrr_u8(TargetRegister::H, TargetRegister::L, operands);
+            }
             0x37 => todo!(),
             0x38 => {
                 // JR C, u8
@@ -290,84 +310,91 @@ where
                 self.jrcc_i8(self.registers.f.get_c(), true, operands);
             }
             0x39 => todo!(),
-            0x3A => todo!(),
+            0x3A => self.ld_dec_a_hl(), // LD A, (HL-)
             0x3B => todo!(),
             0x3C => todo!(),
             0x3D => todo!(),
-            0x3E => todo!(),
+            0x3E => {
+                // LD A,u8
+                let operands = self.fetch_operands(1);
+                self.ldn_u8(TargetRegister::A, operands)
+            }
             0x3F => todo!(),
 
             //  ------------ 0X4N ----------------
-            0x40 => todo!(),
-            0x41 => todo!(),
-            0x42 => todo!(),
-            0x43 => todo!(),
-            0x44 => todo!(),
-            0x45 => todo!(),
-            0x46 => todo!(),
-            0x47 => todo!(),
-            0x48 => todo!(),
-            0x49 => todo!(),
-            0x4A => todo!(),
-            0x4B => todo!(),
-            0x4C => todo!(),
-            0x4D => todo!(),
-            0x4E => todo!(),
-            0x4F => todo!(),
+            0x40 => self.ldrr(TargetRegister::B, TargetRegister::B), // LD B, B
+            0x41 => self.ldrr(TargetRegister::B, TargetRegister::C), // LD B, C
+            0x42 => self.ldrr(TargetRegister::B, TargetRegister::D), // LD B, D
+            0x43 => self.ldrr(TargetRegister::B, TargetRegister::E), // LD B, E
+            0x44 => self.ldrr(TargetRegister::B, TargetRegister::H), // LD B, H
+            0x45 => self.ldrr(TargetRegister::B, TargetRegister::L), // LD B, L
+            0x46 => self.ldr_rr(TargetRegister::B, TargetRegister::H, TargetRegister::L), // LD B,(HL)
+
+            0x47 => self.ldrr(TargetRegister::B, TargetRegister::A), // LD B, A
+            0x48 => self.ldrr(TargetRegister::C, TargetRegister::B), // LD C, B
+            0x49 => self.ldrr(TargetRegister::C, TargetRegister::C), // LD C, C
+            0x4A => self.ldrr(TargetRegister::C, TargetRegister::D), // LD C, D
+            0x4B => self.ldrr(TargetRegister::C, TargetRegister::E), // LD C, E
+            0x4C => self.ldrr(TargetRegister::C, TargetRegister::H), // LD C, H
+            0x4D => self.ldrr(TargetRegister::C, TargetRegister::L), // LD C, L
+            0x4E => self.ldr_rr(TargetRegister::C, TargetRegister::H, TargetRegister::L), // LD C,(HL)
+            0x4F => self.ldrr(TargetRegister::C, TargetRegister::A),                      // LD C, A
 
             //  ------------ 0X5N ----------------
-            0x50 => todo!(),
-            0x51 => todo!(),
-            0x52 => todo!(),
-            0x53 => todo!(),
-            0x54 => todo!(),
-            0x55 => todo!(),
-            0x56 => todo!(),
-            0x57 => todo!(),
-            0x58 => todo!(),
-            0x59 => todo!(),
-            0x5A => todo!(),
-            0x5B => todo!(),
-            0x5C => todo!(),
-            0x5D => todo!(),
-            0x5E => todo!(),
-            0x5F => todo!(),
+            0x50 => self.ldrr(TargetRegister::D, TargetRegister::B), // LD D, B
+            0x51 => self.ldrr(TargetRegister::D, TargetRegister::C), // LD D, C
+            0x52 => self.ldrr(TargetRegister::D, TargetRegister::H), // LD D, D
+            0x53 => self.ldrr(TargetRegister::D, TargetRegister::E), // LD D, E
+            0x54 => self.ldrr(TargetRegister::D, TargetRegister::H), // LD D, H
+            0x55 => self.ldrr(TargetRegister::D, TargetRegister::L), // LD D, L
+            0x56 => self.ldr_rr(TargetRegister::D, TargetRegister::H, TargetRegister::L), // LD D,(HL)
+
+            0x57 => self.ldrr(TargetRegister::D, TargetRegister::A), // LD D, A
+            0x58 => self.ldrr(TargetRegister::E, TargetRegister::B), // LD E, B
+            0x59 => self.ldrr(TargetRegister::E, TargetRegister::C), // LD E, C
+            0x5A => self.ldrr(TargetRegister::E, TargetRegister::H), // LD E, D
+            0x5B => self.ldrr(TargetRegister::E, TargetRegister::E), // LD E, E
+            0x5C => self.ldrr(TargetRegister::E, TargetRegister::H), // LD E, H
+            0x5D => self.ldrr(TargetRegister::E, TargetRegister::L), // LD E, L
+            0x5E => self.ldr_rr(TargetRegister::E, TargetRegister::H, TargetRegister::L), // LD E,(HL)
+            0x5F => self.ldrr(TargetRegister::E, TargetRegister::A),                      // LD E, A
 
             //  ------------ 0X6N ----------------
-            0x60 => todo!(),
-            0x61 => todo!(),
-            0x62 => todo!(),
-            0x63 => todo!(),
-            0x64 => todo!(),
-            0x65 => todo!(),
-            0x66 => todo!(),
-            0x67 => todo!(),
-            0x68 => todo!(),
-            0x69 => todo!(),
-            0x6A => todo!(),
-            0x6B => todo!(),
-            0x6C => todo!(),
-            0x6D => todo!(),
-            0x6E => todo!(),
-            0x6F => todo!(),
+            0x60 => self.ldrr(TargetRegister::H, TargetRegister::B), // LD H, B
+            0x61 => self.ldrr(TargetRegister::H, TargetRegister::C), // LD H, C
+            0x62 => self.ldrr(TargetRegister::H, TargetRegister::D), // LD H, D
+            0x63 => self.ldrr(TargetRegister::H, TargetRegister::E), // LD H, E
+            0x64 => self.ldrr(TargetRegister::H, TargetRegister::H), // LD H, H
+            0x65 => self.ldrr(TargetRegister::H, TargetRegister::L), // LD H, L
+            0x66 => self.ldr_rr(TargetRegister::H, TargetRegister::H, TargetRegister::L), // LD H,(HL)
+            0x67 => self.ldrr(TargetRegister::H, TargetRegister::A),                      // LD H, A
+            0x68 => self.ldrr(TargetRegister::L, TargetRegister::B),                      // LD L, B
+            0x69 => self.ldrr(TargetRegister::L, TargetRegister::C),                      // LD L, C
+            0x6A => self.ldrr(TargetRegister::L, TargetRegister::D),                      // LD L, D
+            0x6B => self.ldrr(TargetRegister::L, TargetRegister::E),                      // LD L, E
+            0x6C => self.ldrr(TargetRegister::L, TargetRegister::H),                      // LD L, H
+            0x6D => self.ldrr(TargetRegister::L, TargetRegister::L),                      // LD L, L
+            0x6E => self.ldr_rr(TargetRegister::L, TargetRegister::H, TargetRegister::L), // LD L,(HL)
+            0x6F => self.ldrr(TargetRegister::L, TargetRegister::A),                      // LD L, A
 
             //  ------------ 0X7N ----------------
-            0x70 => todo!(),
-            0x71 => todo!(),
-            0x72 => todo!(),
-            0x73 => todo!(),
-            0x74 => todo!(),
-            0x75 => todo!(),
-            0x76 => todo!(),
-            0x77 => todo!(),
-            0x78 => todo!(),
-            0x79 => todo!(),
-            0x7A => todo!(),
-            0x7B => todo!(),
-            0x7C => todo!(),
-            0x7D => todo!(),
-            0x7E => todo!(),
-            0x7F => todo!(),
+            0x70 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::B), // LD (HL),B
+            0x71 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::C), // LD (HL),C
+            0x72 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::D), // LD (HL),D
+            0x73 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::E), // LD (HL),E
+            0x74 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::H), // LD (HL),H
+            0x75 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::L), // LD (HL),L
+            0x76 => todo!(),                                                              // HALT
+            0x77 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::A), // LD (HL),A
+
+            0x78 => self.ldrr(TargetRegister::A, TargetRegister::B), // LD A, B
+            0x79 => self.ldrr(TargetRegister::A, TargetRegister::C), // LD A, C
+            0x7A => self.ldrr(TargetRegister::A, TargetRegister::D), // LD A, D
+            0x7B => self.ldrr(TargetRegister::A, TargetRegister::E), // LD A, E
+            0x7C => self.ldrr(TargetRegister::A, TargetRegister::H), // LD A, H
+            0x7D => self.ldrr(TargetRegister::A, TargetRegister::L), // LD A, L
+            0x7E => self.ldr_rr(TargetRegister::A, TargetRegister::H, TargetRegister::L), // LD A, (HL)
+            0x7F => self.ldrr(TargetRegister::A, TargetRegister::A),                      // LD A, A
 
             //  ------------ 0X8N ----------------
             0x80 => todo!(),
@@ -631,6 +658,11 @@ where
         self.registers.write(TargetRegister::A, shifted);
     }
 
+    fn ldrr(&mut self, dest_reg: TargetRegister, source_reg: TargetRegister) {
+        let byte = self.registers.read(source_reg);
+        self.registers.write(dest_reg, byte);
+    }
+
     fn ldrr_r(
         &mut self,
         upper_reg: TargetRegister,
@@ -659,6 +691,20 @@ where
 
         let byte = self.bus.read_byte(address);
         self.registers.write(dest_reg, byte);
+    }
+
+    fn ldrr_u8(
+        &mut self,
+        upper_reg: TargetRegister,
+        lower_reg: TargetRegister,
+        operands: Operands,
+    ) {
+        let address = join_half_words(
+            self.registers.read(upper_reg),
+            self.registers.read(lower_reg),
+        );
+
+        self.bus.write_byte(address, operands[0]);
     }
 
     fn inc_u16(&mut self, reg1: TargetRegister, reg2: TargetRegister) {
@@ -847,6 +893,36 @@ where
         self.bus
             .write_byte(addr, self.registers.read(TargetRegister::A));
         addr += 1;
+
+        self.set_hl(addr);
+    }
+
+    fn ld_dec_hl_a(&mut self) {
+        let mut addr = self.read_hl();
+
+        self.bus
+            .write_byte(addr, self.registers.read(TargetRegister::A));
+        addr -= 1;
+
+        self.set_hl(addr);
+    }
+
+    fn ld_inc_a_hl(&mut self) {
+        let mut addr = self.read_hl();
+
+        let byte = self.bus.read_byte(addr);
+        self.registers.write(TargetRegister::A, byte);
+        addr += 1;
+
+        self.set_hl(addr);
+    }
+
+    fn ld_dec_a_hl(&mut self) {
+        let mut addr = self.read_hl();
+
+        let byte = self.bus.read_byte(addr);
+        self.registers.write(TargetRegister::A, byte);
+        addr -= 1;
 
         self.set_hl(addr);
     }
