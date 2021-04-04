@@ -74,9 +74,11 @@ impl Bus {
             Device::VideoRam(address) => self.video_ram.read(address),
             Device::Cartridge(address) => self.cartridge.read(address),
             Device::Gpu(address) => self.gpu.read(address),
-            Device::Unimplement => {
-                0 /* TODO impl */
-            }
+            Device::Timer(_) => todo!(),
+            Device::P1 => todo!(),
+            Device::DIV => todo!(),
+            Device::IF => todo!(),
+            Device::Unimplement => todo!(),
         }
     }
 
@@ -91,7 +93,11 @@ impl Bus {
             Device::VideoRam(address) => self.video_ram.write(address, byte),
             Device::Cartridge(address) => self.cartridge.write(address, byte),
             Device::Gpu(address) => self.gpu.write(address, byte),
-            Device::Unimplement => { /* TODO impl */ }
+            Device::Timer(_) => todo!(),
+            Device::P1 => todo!(),
+            Device::DIV => todo!(),
+            Device::IF => todo!(),
+            Device::Unimplement => todo!(),
         }
     }
 
@@ -113,6 +119,10 @@ enum Device {
     VideoRam(Address),
     Cartridge(Address),
     Gpu(Address),
+    P1,
+    IF,
+    DIV,
+    Timer(Address),
     Unimplement,
 }
 
@@ -127,8 +137,26 @@ impl Device {
             0xFE00..0xFEA0 => Device::OamRam(addr - 0xFE00),
             0xFF80..=0xFFFF => Device::HRam(addr - 0xFF80),
             0xFF40..0xFF80 => Device::Gpu(addr - 0xFF40),
-            0xFF0F => Device::Unimplement,
-            _ => todo!("read byte {:X}", addr),
+            0xFF00 => {
+                // TODO Padの実装が入る
+                log::warn!("TODO: implement Pad device");
+                Device::P1
+            }
+            0xFF04 => {
+                // TODO DIV の実装が入る
+                log::warn!("TODO: implement DIV register");
+                Device::DIV
+            }
+            0xFF05..0xFF08 => {
+                log::warn!("TODO: implement timer");
+                Device::Timer(addr - 0xFF05)
+            }
+            0xFF0F => {
+                // TODO IF の実装が入る
+                log::warn!("TODO: implement IF device");
+                Device::IF
+            }
+            _ => Device::Unimplement,
         }
     }
 }

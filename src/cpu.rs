@@ -127,6 +127,8 @@ where
     pc: Word,
     sp: Word,
     bus: Bus,
+
+    halted: bool,
 }
 
 impl<L> Cpu<L>
@@ -149,10 +151,14 @@ where
                 l: 0x0D,
             },
             bus,
+            halted: false,
         }
     }
 
     pub fn step(&mut self) -> Result<()> {
+        if self.halted {
+            return Ok(());
+        }
         let opcode = self.fetch();
 
         self.execute(opcode);
@@ -173,8 +179,6 @@ where
 
     // opcode list https://izik1.github.io/gbops/
     fn execute(&mut self, opcode: Opecode) {
-        self.logger.trace(format!("opcode {:X}", opcode));
-
         match opcode {
             //  ------------ 0x0N ----------------
             0x00 => {} // NOP
@@ -384,7 +388,7 @@ where
             0x73 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::E), // LD (HL),E
             0x74 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::H), // LD (HL),H
             0x75 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::L), // LD (HL),L
-            0x76 => todo!(),                                                              // HALT
+            0x76 => self.halt(),                                                          // HALT
             0x77 => self.ldrr_r(TargetRegister::H, TargetRegister::L, TargetRegister::A), // LD (HL),A
 
             0x78 => self.ldrr(TargetRegister::A, TargetRegister::B), // LD A, B
@@ -829,6 +833,7 @@ where
     fn ldsp_u16(&mut self, operands: Operands) {
         self.sp = join_half_words(operands[1], operands[0])
     }
+
     fn jp_u16(&mut self, operands: Operands) {
         self.pc = join_half_words(operands[1], operands[0])
     }
@@ -1006,5 +1011,9 @@ where
 
         self.registers.write(TargetRegister::H, upper);
         self.registers.write(TargetRegister::L, lower);
+    }
+
+    fn halt(&mut self) {
+        self.halted = true
     }
 }
