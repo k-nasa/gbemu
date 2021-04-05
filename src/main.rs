@@ -32,7 +32,9 @@ fn main() -> Result<()> {
     let mirror_ram = Ram::with_size(0x2000);
     let working_ram = Ram::with_size(0x2000);
     let cartridge = Cartridge::new(bytes);
-    let mut gpu = Gpu::new(1024, None); // TODO implement
+    let gpu = Gpu::new(1024, None); // TODO implement
+    let gpu = Arc::new(Mutex::new(gpu));
+
     let bus = Bus::new(
         cartridge,
         video_ram,
@@ -40,11 +42,10 @@ fn main() -> Result<()> {
         oam_ram,
         mirror_ram,
         working_ram,
-        gpu,
+        gpu.clone(),
     );
     let bus = Arc::new(Mutex::new(bus));
-
-    let emu = Emulator::new(bus.clone());
+    let emu = Emulator::new(bus.clone(), gpu.clone());
 
     info!("start emulator");
     emu.start()?;

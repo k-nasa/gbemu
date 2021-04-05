@@ -1,6 +1,7 @@
 use crate::cartridge::Cartridge;
 use crate::gpu::Gpu;
 use crate::ram::Ram;
+use crate::SharedGpu;
 use crate::{split_word, HalfWord, Word};
 
 /// Memory map
@@ -39,7 +40,7 @@ pub struct Bus {
     working_ram: Ram,
     video_ram: Ram,
     cartridge: Cartridge,
-    gpu: Gpu,
+    gpu: SharedGpu,
 }
 
 impl Bus {
@@ -50,7 +51,7 @@ impl Bus {
         oam_ram: Ram,
         mirror_ram: Ram,
         working_ram: Ram,
-        gpu: Gpu,
+        gpu: SharedGpu,
     ) -> Bus {
         Bus {
             h_ram,
@@ -73,7 +74,7 @@ impl Bus {
             Device::WorkingRam(address) => self.working_ram.read(address),
             Device::VideoRam(address) => self.video_ram.read(address),
             Device::Cartridge(address) => self.cartridge.read(address),
-            Device::Gpu(address) => self.gpu.read(address),
+            Device::Gpu(address) => self.gpu.lock().unwrap().read(address),
             Device::Timer(_) => todo!(),
             Device::P1 => todo!(),
             Device::DIV => todo!(),
@@ -92,7 +93,7 @@ impl Bus {
             Device::WorkingRam(address) => self.working_ram.write(address, byte),
             Device::VideoRam(address) => self.video_ram.write(address, byte),
             Device::Cartridge(address) => self.cartridge.write(address, byte),
-            Device::Gpu(address) => self.gpu.write(address, byte),
+            Device::Gpu(address) => self.gpu.lock().unwrap().write(address, byte),
             Device::Timer(_) => todo!(),
             Device::P1 => todo!(),
             Device::DIV => todo!(),

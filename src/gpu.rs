@@ -15,9 +15,7 @@ impl Gpu {
         }
     }
 
-    pub fn set_bus(&mut self, bus: ShareBus) {
-        self.bus = Some(bus);
-    }
+    pub fn step(&mut self) {}
 
     pub fn read(&self, address: Word) -> HalfWord {
         self.data[address as usize]
