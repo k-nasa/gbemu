@@ -1,5 +1,5 @@
 use crate::logger::Logger;
-use crate::ShareBus;
+use crate::SharedBus;
 use crate::{join_half_words, split_word, HalfWord, Word};
 use anyhow::Result;
 
@@ -127,7 +127,7 @@ where
     registers: Registers,
     pc: Word,
     sp: Word,
-    bus: ShareBus,
+    bus: SharedBus,
 
     halted: bool,
 }
@@ -136,7 +136,7 @@ impl<L> Cpu<L>
 where
     L: Logger + ?Sized,
 {
-    pub fn new(logger: Box<L>, bus: ShareBus) -> Self {
+    pub fn new(logger: Box<L>, bus: SharedBus) -> Self {
         Cpu {
             logger,
             pc: INIT_PC,

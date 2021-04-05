@@ -14,7 +14,7 @@ pub mod ram;
 
 pub(crate) type Word = u16;
 pub(crate) type HalfWord = u8;
-pub type ShareBus = Arc<Mutex<bus::Bus>>;
+pub type SharedBus = Arc<Mutex<bus::Bus>>;
 pub type SharedGpu = Arc<Mutex<gpu::Gpu>>;
 
 pub(crate) fn join_half_words(upper: HalfWord, lower: HalfWord) -> Word {
