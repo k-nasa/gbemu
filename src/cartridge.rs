@@ -5,9 +5,7 @@ pub struct Cartridge {
 }
 
 impl Cartridge {
-    pub fn new(mut data: Vec<u8>) -> Cartridge {
-        // data.resize_with(128 * 1024, Default::default);
-
+    pub fn new(data: Vec<u8>) -> Cartridge {
         Cartridge { data }
     }
 

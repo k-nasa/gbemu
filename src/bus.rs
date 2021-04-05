@@ -78,7 +78,7 @@ impl Bus {
             Device::P1 => todo!(),
             Device::DIV => todo!(),
             Device::IF => todo!(),
-            Device::Unimplement => todo!(),
+            Device::Unimplement => 0,
         }
     }
 
@@ -97,7 +97,7 @@ impl Bus {
             Device::P1 => todo!(),
             Device::DIV => todo!(),
             Device::IF => todo!(),
-            Device::Unimplement => todo!(),
+            Device::Unimplement => log::warn!("unimplemented addr {}", address),
         }
     }
 
@@ -131,7 +131,7 @@ impl Device {
         match addr {
             0x0000..0x8000 => Device::Cartridge(addr),
             0x8000..0xA000 => Device::VideoRam(addr - 0x8000),
-            0xA000..0xC000 => Device::Cartridge(addr), // FIXME ちゃんとしたアドレスにする
+            0xA000..0xC000 => Device::Cartridge(addr),
             0xC000..0xE000 => Device::WorkingRam(addr - 0xC000),
             0xE000..0xFE00 => Device::MirrorRam(addr - 0xE000),
             0xFE00..0xFEA0 => Device::OamRam(addr - 0xFE00),
@@ -140,21 +140,22 @@ impl Device {
             0xFF00 => {
                 // TODO Padの実装が入る
                 log::warn!("TODO: implement Pad device");
-                Device::P1
+                Device::Unimplement
             }
             0xFF04 => {
                 // TODO DIV の実装が入る
                 log::warn!("TODO: implement DIV register");
-                Device::DIV
+                Device::Unimplement
             }
             0xFF05..0xFF08 => {
+                // TODO Timerの実装が入る
                 log::warn!("TODO: implement timer");
-                Device::Timer(addr - 0xFF05)
+                Device::Unimplement
             }
             0xFF0F => {
                 // TODO IF の実装が入る
                 log::warn!("TODO: implement IF device");
-                Device::IF
+                Device::Unimplement
             }
             _ => Device::Unimplement,
         }

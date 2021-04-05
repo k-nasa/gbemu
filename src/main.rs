@@ -4,6 +4,7 @@ use gbemu::emulator::Emulator;
 use gbemu::gpu::Gpu;
 use gbemu::ram::Ram;
 use log::info;
+use std::sync::{Arc, Mutex};
 
 use anyhow::Result;
 
@@ -31,7 +32,7 @@ fn main() -> Result<()> {
     let mirror_ram = Ram::with_size(0x2000);
     let working_ram = Ram::with_size(0x2000);
     let cartridge = Cartridge::new(bytes);
-    let gpu = Gpu::with_size(1024); // TODO implement
+    let mut gpu = Gpu::new(1024, None); // TODO implement
     let bus = Bus::new(
         cartridge,
         video_ram,
@@ -41,8 +42,9 @@ fn main() -> Result<()> {
         working_ram,
         gpu,
     );
+    let bus = Arc::new(Mutex::new(bus));
 
-    let emu = Emulator::new(bus);
+    let emu = Emulator::new(bus.clone());
 
     info!("start emulator");
     emu.start()?;

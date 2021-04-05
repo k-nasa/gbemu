@@ -2,6 +2,8 @@
 
 //! Game Boy emulator core implementation.
 
+use std::sync::{Arc, Mutex};
+
 pub mod bus;
 pub mod cartridge;
 pub(crate) mod cpu;
@@ -12,6 +14,7 @@ pub mod ram;
 
 pub(crate) type Word = u16;
 pub(crate) type HalfWord = u8;
+pub type ShareBus = Arc<Mutex<bus::Bus>>;
 
 pub(crate) fn join_half_words(upper: HalfWord, lower: HalfWord) -> Word {
     (upper as u16) << 8 ^ lower as u16

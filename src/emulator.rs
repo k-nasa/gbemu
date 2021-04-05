@@ -1,6 +1,6 @@
-use crate::bus::Bus;
 use crate::cpu::Cpu;
 use crate::logger::{Logger, LoggerImpl};
+use crate::ShareBus;
 use anyhow::Result;
 
 pub struct Emulator {
@@ -8,7 +8,7 @@ pub struct Emulator {
 }
 
 impl Emulator {
-    pub fn new(bus: Bus) -> Self {
+    pub fn new(bus: ShareBus) -> Self {
         Emulator {
             cpu: Cpu::new(Box::new(LoggerImpl {}), bus),
         }

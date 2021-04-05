@@ -1,5 +1,6 @@
 use crate::logger::Logger;
-use crate::{bus::Bus, join_half_words, split_word, HalfWord, Word};
+use crate::ShareBus;
+use crate::{join_half_words, split_word, HalfWord, Word};
 use anyhow::Result;
 
 type Opecode = u8;
@@ -126,7 +127,7 @@ where
     registers: Registers,
     pc: Word,
     sp: Word,
-    bus: Bus,
+    bus: ShareBus,
 
     halted: bool,
 }
@@ -135,7 +136,7 @@ impl<L> Cpu<L>
 where
     L: Logger + ?Sized,
 {
-    pub fn new(logger: Box<L>, bus: Bus) -> Self {
+    pub fn new(logger: Box<L>, bus: ShareBus) -> Self {
         Cpu {
             logger,
             pc: INIT_PC,
@@ -157,8 +158,10 @@ where
 
     pub fn step(&mut self) -> Result<()> {
         if self.halted {
+            self.logger.info(format!("halted cpu"));
             return Ok(());
         }
+
         let opcode = self.fetch();
 
         self.execute(opcode);
@@ -167,7 +170,7 @@ where
     }
 
     fn fetch(&mut self) -> Opecode {
-        let opcode = self.bus.read_byte(self.pc);
+        let opcode = self.bus_read_byte(self.pc);
         self.pc += 1;
 
         opcode
@@ -593,28 +596,26 @@ where
     }
 
     fn ldn_a(&mut self, operands: Operands) {
-        self.bus.write_byte(
+        self.bus_write_byte(
             0xFF00 + operands[0] as u16,
             self.registers.read(TargetRegister::A),
         )
     }
 
     fn ldu8_a(&mut self, operands: Operands) {
-        let byte = self.bus.read_byte(0xFF00 + operands[0] as u16);
+        let byte = self.bus_read_byte(0xFF00 + operands[0] as u16);
         self.registers.write(TargetRegister::A, byte);
     }
 
     fn ldc_a(&mut self) {
-        self.bus.write_byte(
+        self.bus_write_byte(
             0xFF00 + self.registers.read(TargetRegister::C) as u16,
             self.registers.read(TargetRegister::A),
         )
     }
 
     fn lda_c(&mut self) {
-        let byte = self
-            .bus
-            .read_byte(0xFF00 + self.registers.read(TargetRegister::C) as u16);
+        let byte = self.bus_read_byte(0xFF00 + self.registers.read(TargetRegister::C) as u16);
         self.registers.write(TargetRegister::A, byte);
     }
 
@@ -677,7 +678,7 @@ where
         );
 
         let byte = self.registers.read(byte_reg);
-        self.bus.write_byte(address, byte);
+        self.bus_write_byte(address, byte);
     }
 
     fn ldr_rr(
@@ -691,7 +692,7 @@ where
             self.registers.read(lower_reg),
         );
 
-        let byte = self.bus.read_byte(address);
+        let byte = self.bus_read_byte(address);
         self.registers.write(dest_reg, byte);
     }
 
@@ -706,7 +707,7 @@ where
             self.registers.read(lower_reg),
         );
 
-        self.bus.write_byte(address, operands[0]);
+        self.bus_write_byte(address, operands[0]);
     }
 
     fn inc_u16(&mut self, reg1: TargetRegister, reg2: TargetRegister) {
@@ -788,7 +789,7 @@ where
     fn ldnn_sp(&mut self, operands: Operands) {
         let address = join_half_words(operands[1], operands[0]);
 
-        self.bus.write_word(address, self.sp);
+        self.bus_write_word(address, self.sp);
     }
 
     fn addhl_rr(&mut self, upper_reg: TargetRegister, lower_reg: TargetRegister) {
@@ -839,7 +840,7 @@ where
     }
 
     // fn lda_u8(&mut self, operands: Operands) {
-    //     let byte = self.bus.read_byte(0xFF00 + operands[0] as u16);
+    //     let byte = self.bus.bus_read_byte(0xFF00 + operands[0] as u16);
     //     self.registers.write(TargetRegister::A, byte);
     // }
 
@@ -849,7 +850,7 @@ where
         let value = operands[0];
         let a = self.registers.read(TargetRegister::A);
 
-        if a & 0xF0 < value & 0xF0 {
+        if a & 0xF < value & 0xF {
             self.registers.f.set_h(true)
         } else {
             self.registers.f.set_h(false)
@@ -861,7 +862,7 @@ where
             self.registers.f.set_c(false)
         }
 
-        if let (_, true) = a.overflowing_sub(value) {
+        if value == a {
             self.registers.f.set_z(true)
         } else {
             self.registers.f.set_z(false)
@@ -893,8 +894,7 @@ where
     fn ld_inc_hl_a(&mut self) {
         let mut addr = self.read_hl();
 
-        self.bus
-            .write_byte(addr, self.registers.read(TargetRegister::A));
+        self.bus_write_byte(addr, self.registers.read(TargetRegister::A));
         addr += 1;
 
         self.set_hl(addr);
@@ -903,8 +903,7 @@ where
     fn ld_dec_hl_a(&mut self) {
         let mut addr = self.read_hl();
 
-        self.bus
-            .write_byte(addr, self.registers.read(TargetRegister::A));
+        self.bus_write_byte(addr, self.registers.read(TargetRegister::A));
         addr -= 1;
 
         self.set_hl(addr);
@@ -913,7 +912,7 @@ where
     fn ld_inc_a_hl(&mut self) {
         let mut addr = self.read_hl();
 
-        let byte = self.bus.read_byte(addr);
+        let byte = self.bus_read_byte(addr);
         self.registers.write(TargetRegister::A, byte);
         addr += 1;
 
@@ -923,7 +922,7 @@ where
     fn ld_dec_a_hl(&mut self) {
         let mut addr = self.read_hl();
 
-        let byte = self.bus.read_byte(addr);
+        let byte = self.bus_read_byte(addr);
         self.registers.write(TargetRegister::A, byte);
         addr -= 1;
 
@@ -940,7 +939,7 @@ where
     }
 
     fn xora_u16(&mut self, addr: Word) {
-        let value = self.bus.read_byte(addr);
+        let value = self.bus_read_byte(addr);
         let byte = self.xor(self.registers.read(TargetRegister::A), value);
 
         self.registers.write(TargetRegister::A, byte);
@@ -989,11 +988,11 @@ where
 
     fn push(&mut self, half_word: HalfWord) {
         self.sp -= 1;
-        self.bus.write_byte(self.sp, half_word)
+        self.bus_write_byte(self.sp, half_word)
     }
 
     fn pop(&mut self) -> HalfWord {
-        let byte = self.bus.read_byte(self.sp);
+        let byte = self.bus_read_byte(self.sp);
         self.sp += 1;
 
         byte
@@ -1015,5 +1014,20 @@ where
 
     fn halt(&mut self) {
         self.halted = true
+    }
+
+    pub fn bus_read_byte(&self, address: Word) -> u8 {
+        let mut bus = self.bus.lock().unwrap();
+        bus.read_byte(address)
+    }
+
+    pub fn bus_write_byte(&mut self, address: Word, byte: HalfWord) {
+        let mut bus = self.bus.lock().unwrap();
+        bus.write_byte(address, byte)
+    }
+
+    pub fn bus_write_word(&mut self, address: Word, word: Word) {
+        let mut bus = self.bus.lock().unwrap();
+        bus.write_word(address, word)
     }
 }
