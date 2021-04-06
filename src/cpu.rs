@@ -1017,7 +1017,7 @@ where
     }
 
     pub fn bus_read_byte(&self, address: Word) -> u8 {
-        let mut bus = self.bus.lock().unwrap();
+        let bus = self.bus.lock().unwrap();
         bus.read_byte(address)
     }
 
