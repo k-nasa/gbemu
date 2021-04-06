@@ -35,7 +35,6 @@ fn main() -> Result<()> {
     let cartridge = Cartridge::new(bytes);
     let gpu = Gpu::new(1024, None); // TODO implement
     let gpu = Arc::new(Mutex::new(gpu));
-    let gpucell = RefCell::new(gpu.clone());
 
     let bus = Bus::new(
         cartridge,
@@ -44,11 +43,11 @@ fn main() -> Result<()> {
         oam_ram,
         mirror_ram,
         working_ram,
-        gpucell,
+        gpu.clone(),
     );
 
     let bus = Arc::new(Mutex::new(bus));
-    gpu.lock().unwrap().set_bus(RefCell::new(bus.clone()));
+    gpu.lock().unwrap().set_bus(bus.clone());
 
     let emu = Emulator::new(bus.clone(), gpu.clone());
 
