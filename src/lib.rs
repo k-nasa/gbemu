@@ -11,6 +11,7 @@ pub mod emulator;
 pub mod gpu;
 pub(crate) mod logger;
 pub mod ram;
+mod window;
 
 pub(crate) type Word = u16;
 pub(crate) type HalfWord = u8;
@@ -24,3 +25,6 @@ pub(crate) fn join_half_words(upper: HalfWord, lower: HalfWord) -> Word {
 pub(crate) fn split_word(word: Word) -> (HalfWord, HalfWord) {
     ((word >> 8) as HalfWord, (word & 0x00FF) as HalfWord)
 }
+
+const SCREEN_WIDTH: usize = 160;
+const SCREEN_HEIGHT: usize = 144;
