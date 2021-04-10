@@ -2,7 +2,7 @@ use crate::cartridge::Cartridge;
 use crate::ram::Ram;
 use crate::SharedGpu;
 use crate::{split_word, HalfWord, Word};
-use std::cell::RefCell;
+
 
 /// Memory map
 /// Ref http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
@@ -53,15 +53,7 @@ impl Bus {
         working_ram: Ram,
         gpu: SharedGpu,
     ) -> Bus {
-        Bus {
-            h_ram,
-            oam_ram,
-            working_ram,
-            mirror_ram,
-            cartridge,
-            video_ram,
-            gpu,
-        }
+        Bus { h_ram, oam_ram, mirror_ram, working_ram, video_ram, cartridge, gpu }
     }
 
     pub fn read_byte(&self, address: Word) -> u8 {

@@ -10,13 +10,11 @@ fn main() -> Result<()> {
     env_logger::init();
 
     let args: Vec<String> = std::env::args().collect();
-
     if args.is_empty() {
         anyhow::bail!("Plese speficy filepath")
     }
 
     let filename = &args[1];
-
     info!("loading file {}", filename);
     let bytes = std::fs::read(filename).unwrap();
 
