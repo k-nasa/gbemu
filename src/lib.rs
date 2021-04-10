@@ -11,7 +11,6 @@ pub mod emulator;
 pub mod gpu;
 pub(crate) mod logger;
 pub mod ram;
-mod window;
 
 pub(crate) type Word = u16;
 pub(crate) type HalfWord = u8;

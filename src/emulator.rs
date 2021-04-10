@@ -13,8 +13,8 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
-const WIDTH: u32 = 320;
-const HEIGHT: u32 = 240;
+const SCREEN_WIDTH: usize = 160;
+const SCREEN_HEIGHT: usize = 144;
 
 pub struct Emulator {
     cpu: Cpu,
@@ -60,7 +60,7 @@ impl Emulator {
         let event_loop = EventLoop::new();
         let mut input = WinitInputHelper::new();
         let window = {
-            let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
+            let size = LogicalSize::new(SCREEN_WIDTH as f64, SCREEN_HEIGHT as f64);
             WindowBuilder::new()
                 .with_title("gbemu")
                 .with_inner_size(size)
@@ -72,7 +72,7 @@ impl Emulator {
             let window_size = window.inner_size();
             let surface_texture =
                 SurfaceTexture::new(window_size.width, window_size.height, &window);
-            Pixels::new(WIDTH, HEIGHT, surface_texture).unwrap()
+            Pixels::new(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32, surface_texture).unwrap()
         };
 
         event_loop.run(move |event, _, control_flow| {
