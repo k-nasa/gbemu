@@ -61,6 +61,12 @@ impl Gpu {
             let tile_x = (x + self.scroll_x) / 8 % 32;
 
             let tile_id = self.get_tile_id(tile_y, tile_x, self.get_bg_tilemap_addr());
+            let palette_id =  {
+                let offset = (self.scroll_x % 8) + x;
+                let addr = (self.ly + self.scroll_y) % 8;
+
+                self.get_bg_palette_id(tile_id, offset, addr)
+            }
         }
     }
 
@@ -122,4 +128,34 @@ impl Gpu {
         }
         return TILEMAP0;
     }
+
+    fn get_bg_palette_id(tile_id: Word, x: usize, y: usize) -> Word {
+        let x = x % 8;
+    }
 }
+
+// func (g *GPU) getBGPaletteID(tileID int, x int, y uint) byte {
+// 	x = x % 8
+// 	var addr types.Word
+// 	// In the first case, patterns are numbered with unsigned numbers from 0 to 255 (i.e.
+// 	// 	pattern #0 lies at address $8000). In the second case,
+// 	// 	patterns have signed numbers from -128 to 127 (i.e.
+// 	// 	pattern #0 lies at address $9000). The Tile Data Table
+// 	// 	address for the background can be selected via LCDC	register.
+// 	if g.tileData0Selected() {
+// 		addr = types.Word((int(int8(tileID)) + 128) * 0x10)
+// 	} else {
+// 		addr = types.Word(tileID * 0x10)
+// 	}
+// 	base := types.Word(g.getTileDataAddr() + addr + types.Word(y*2))
+// 	l1 := g.bus.ReadByte(base)
+// 	l2 := g.bus.ReadByte(base + 1)
+// 	paletteID := byte(0)
+// 	if l1&(0x01<<(7-uint(x))) != 0 {
+// 		paletteID = 1
+// 	}
+// 	if l2&(0x01<<(7-uint(x))) != 0 {
+// 		paletteID += 2
+// 	}
+// 	return paletteID
+// }
