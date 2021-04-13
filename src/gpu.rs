@@ -8,7 +8,6 @@ const TILEMAP0: Word = 0x9800;
 const TILEMAP1: Word = 0x9C00;
 
 pub struct Gpu {
-    // FIXME ダミー実装
     data: Vec<u8>,
     bus: Option<SharedBus>,
     cycles: usize,
@@ -72,26 +71,6 @@ impl Gpu {
 
     fn build_sprites(&mut self) {}
 
-    //     if g.ly == constants.ScreenHeight {
-    //         g.buildSprites()
-    //     } else if g.ly >= constants.ScreenHeight+LCDVBlankHeight {
-    //         g.ly = 0
-    //             g.buildBGTile()
-    //     } else if g.ly < constants.ScreenHeight {
-    //         g.buildBGTile()
-    //             if g.windowEnabled() {
-    //                 g.buildWindowTile()
-    //             }
-    //     }
-    //
-    //     if g.ly == uint(g.lyc) {
-    //         g.stat |= 0x04
-    //     } else {
-    //         g.stat &= 0xFB
-    //     }
-    //     g.ly++
-    //         g.clock -= CyclePerLine
-
     pub fn set_bus(&mut self, bus: SharedBus) {
         self.bus = Some(bus)
     }
@@ -130,32 +109,6 @@ impl Gpu {
     }
 
     fn get_bg_palette_id(tile_id: Word, x: usize, y: usize) -> Word {
-        let x = x % 8;
+        todo!()
     }
 }
-
-// func (g *GPU) getBGPaletteID(tileID int, x int, y uint) byte {
-// 	x = x % 8
-// 	var addr types.Word
-// 	// In the first case, patterns are numbered with unsigned numbers from 0 to 255 (i.e.
-// 	// 	pattern #0 lies at address $8000). In the second case,
-// 	// 	patterns have signed numbers from -128 to 127 (i.e.
-// 	// 	pattern #0 lies at address $9000). The Tile Data Table
-// 	// 	address for the background can be selected via LCDC	register.
-// 	if g.tileData0Selected() {
-// 		addr = types.Word((int(int8(tileID)) + 128) * 0x10)
-// 	} else {
-// 		addr = types.Word(tileID * 0x10)
-// 	}
-// 	base := types.Word(g.getTileDataAddr() + addr + types.Word(y*2))
-// 	l1 := g.bus.ReadByte(base)
-// 	l2 := g.bus.ReadByte(base + 1)
-// 	paletteID := byte(0)
-// 	if l1&(0x01<<(7-uint(x))) != 0 {
-// 		paletteID = 1
-// 	}
-// 	if l2&(0x01<<(7-uint(x))) != 0 {
-// 		paletteID += 2
-// 	}
-// 	return paletteID
-// }
