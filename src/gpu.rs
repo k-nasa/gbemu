@@ -60,12 +60,14 @@ impl Gpu {
             let tile_x = (x + self.scroll_x) / 8 % 32;
 
             let tile_id = self.get_tile_id(tile_y, tile_x, self.get_bg_tilemap_addr());
-            let palette_id =  {
+            let palette_id = {
                 let offset = (self.scroll_x % 8) + x;
                 let addr = (self.ly + self.scroll_y) % 8;
 
                 self.get_bg_palette_id(tile_id, offset, addr)
-            }
+            };
+
+            todo!() // TODO return image data
         }
     }
 
@@ -108,7 +110,32 @@ impl Gpu {
         return TILEMAP0;
     }
 
-    fn get_bg_palette_id(tile_id: Word, x: usize, y: usize) -> Word {
-        todo!()
+    fn get_bg_palette_id(&self, tile_id: HalfWord, x: usize, y: usize) -> Word {
+        // TODO implement switch tile data
+        let addr = u16::from((tile_id + 128) * 0x10);
+        let base = self.get_tile_data_addr() + addr + (y * 2) as u16;
+
+        let l1 = self.read_bus_byte(base);
+        let l2 = self.read_bus_byte(base + 1);
+
+        let mut palette_id = 0;
+        if l1 & (0x01 << (7 - x)) != 0 {
+            palette_id = 1
+        }
+        if l2 & (0x01 << (7 - x)) != 0 {
+            palette_id += 2
+        }
+
+        palette_id
+    }
+
+    fn get_tile_data_addr(&self) -> Word {
+        // TODO implement switch tile data
+        0x8800
+    }
+
+    fn read_bus_byte(&self, addr: Word) -> HalfWord {
+        let bus = self.bus.as_ref().unwrap().lock().unwrap();
+        bus.read_byte(addr)
     }
 }
