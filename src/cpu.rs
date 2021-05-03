@@ -1,4 +1,3 @@
-use crate::logger::Logger;
 use crate::SharedBus;
 use crate::{join_half_words, split_word, HalfWord, Word};
 use anyhow::Result;
@@ -119,11 +118,7 @@ impl FlagRegister {
 const INIT_PC: Word = 0x100;
 const INIT_SP: Word = 0xFFFE;
 
-pub struct Cpu<L>
-where
-    L: Logger + ?Sized,
-{
-    logger: Box<L>,
+pub struct Cpu {
     registers: Registers,
     pc: Word,
     sp: Word,
@@ -132,13 +127,9 @@ where
     halted: bool,
 }
 
-impl<L> Cpu<L>
-where
-    L: Logger + ?Sized,
-{
-    pub fn new(logger: Box<L>, bus: SharedBus) -> Self {
+impl Cpu {
+    pub fn new(bus: SharedBus) -> Self {
         Cpu {
-            logger,
             pc: INIT_PC,
             sp: INIT_SP,
             registers: Registers {
@@ -158,7 +149,6 @@ where
 
     pub fn step(&mut self) -> Result<()> {
         if self.halted {
-            self.logger.info(format!("halted cpu"));
             return Ok(());
         }
 
