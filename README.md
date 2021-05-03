@@ -4,6 +4,6 @@
 
 A simple game boy emulator
 
+This is an ongoing project
 </div>
 
-This is an ongoing project
